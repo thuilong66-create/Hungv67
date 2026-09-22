@@ -36,7 +36,7 @@
         #game-frame { width: 100%; height: 100%; border: none; }
         .close-game-btn { position: absolute; top: 10px; left: 10px; background: var(--secondary); color: #fff; border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; z-index: 2001; box-shadow: 0 4px 0 #b30015; font-family: 'Fredoka One'; cursor: pointer; }
         
-        /* WIDGET ROBOT ĐI KÈM BẢNG KẾT QUẢ BÊN CẠNH */
+        /* WIDGET ROBOT KÈM BẢNG KẾT QUẢ BÊN CẠNH */
         #draggable-robot {
             position: absolute;
             top: 30%;
@@ -49,7 +49,6 @@
             transition: transform 0.2s ease;
         }
 
-        /* Nơi duy nhất bấm đè để kéo */
         .robo-img {
             width: 75px;
             height: auto;
@@ -60,7 +59,6 @@
         }
         .robo-img:active { cursor: grabbing; }
 
-        /* Bảng Dự Đoán Kết Quả */
         .robo-dialog {
             background: rgba(255, 255, 255, 0.95);
             border: 3px solid var(--primary);
@@ -68,11 +66,10 @@
             border-radius: 15px;
             text-align: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 150px;
+            width: 160px;
             position: relative;
         }
         
-        /* MENU BA GẠCH */
         #robo-menu { display: none; position: absolute; top: 35px; right: 5px; background: #fff; border: 2px solid var(--primary); border-radius: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.2); z-index: 2010; width: 130px; text-align: left; overflow: hidden;}
         .menu-item { padding: 8px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #eee; color: var(--text-main); }
         .menu-item:hover { background: #f0f8ff; color: var(--primary); }
@@ -92,9 +89,7 @@
         <button class="close-game-btn" onclick="closeGame()"><i class="fas fa-times"></i> ĐÓNG GAME</button>
         <iframe id="game-frame" src=""></iframe>
         
-        <!-- ROBOT BÊN CẠNH BẢNG KẾT QUẢ -->
         <div id="draggable-robot" style="transform: scale(1);">
-            <!-- CHỈ KÉO KHI ĐÈ TRỰC TIẾP VÀO ẢNH ROBOT -->
             <img class="robo-img" id="drag-handle" src="https://i.ibb.co/8LfL8qMY/1790089819833.png" alt="Robot">
             
             <div class="robo-dialog" id="robo-dialog-panel">
@@ -122,9 +117,9 @@
                 </div>
 
                 <div id="robo-view-auto">
-                    <div style="font-size: 10px; font-weight: 800;">PHIÊN: <span id="robo-phien">...</span></div>
+                    <div style="font-size: 10px; font-weight: 800;">PHIÊN: <span id="robo-phien">Đang tải...</span></div>
                     <div id="robo-kq" style="font-size: 22px; font-family: 'Fredoka One'; color: var(--secondary);">SCAN</div>
-                    <div id="robo-tyle" style="color: var(--primary); font-size: 12px; font-weight: 800;">Đang dò...</div>
+                    <div id="robo-tyle" style="color: var(--primary); font-size: 11px; font-weight: 800;">Đang kết nối API...</div>
                 </div>
 
                 <div id="robo-view-md5" style="display: none;">
@@ -203,19 +198,19 @@
         </div>
     </div>
 
-    <div id="admin-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="max-width: 500px;">
-            <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
-            <div class="panel-title" style="color:var(--secondary);">QUẢN TRỊ ADMIN</div>
-            <div style="max-height: 400px; overflow-y: auto;">
-                <h3 style="margin: 10px 0; color: green;">DUYỆT THẺ NẠP</h3><div id="admin-deps"></div>
-                <h3 style="margin: 10px 0; color: var(--primary);">QUẢN LÝ TÀI KHOẢN</h3><div id="admin-users"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
+        // CẤU HÌNH API
+        const API_URLS = {
+            'lc79': 'https://wtx.tele68.com/v1/tx/lite-sessions',
+            'betvip': 'https://wtx.macminim6.online/v1/tx/lite-sessions'
+        };
+
+        let activeTool = 'lc79';
+        let apiTimer = null;
+        let adminOverride = 'AUTO';
+
         function openTool(toolName) {
+            activeTool = toolName;
             const overlay = document.getElementById('game-overlay');
             const frame = document.getElementById('game-frame');
             const title = document.getElementById('robo-mode-title');
@@ -224,18 +219,120 @@
             
             if(toolName === 'betvip') {
                 frame.src = 'https://play.betvip.fit'; 
-                title.innerText = 'BETVIP TOOL';
-            } else if (toolName === 'lc79') {
+                title.innerText = 'AUTO BETVIP';
+            } else {
                 frame.src = 'https://lc79.bet'; 
-                title.innerText = 'LC79 TOOL';
+                title.innerText = 'AUTO LC79';
             }
+
+            // Gọi API ngay lập tức và cài đặt chu kỳ cập nhật mỗi 3 giây
+            fetchGameAPI();
+            if(apiTimer) clearInterval(apiTimer);
+            apiTimer = setInterval(fetchGameAPI, 3000);
         }
 
         function closeGame() {
             document.getElementById('game-overlay').style.display = 'none';
             document.getElementById('game-frame').src = '';
+            if(apiTimer) clearInterval(apiTimer);
         }
 
+        // ----------------------------------------------------
+        // LỌC DỮ LIỆU TỪ API VÀ TÍNH DỰ ĐOÁN
+        // ----------------------------------------------------
+        async function fetchGameAPI() {
+            try {
+                const response = await fetch(API_URLS[activeTool]);
+                const data = await response.json();
+                
+                let sessions = Array.isArray(data) ? data : (data.data || []);
+                if (sessions.length > 0) {
+                    processPredictionData(sessions);
+                }
+            } catch (err) {
+                console.log("Đang kết nối lại API...");
+                document.getElementById('robo-tyle').innerText = 'Đang dò cầu...';
+            }
+        }
+
+        function processPredictionData(sessions) {
+            const latest = sessions[0];
+            const currentSessionId = (parseInt(latest.session) || parseInt(latest.id) || 0) + 1;
+            
+            // Chuyển đổi dữ liệu phiên thành lịch sử Kết Quả (TÀI / XỈU)
+            const history = sessions.slice(0, 10).map(s => {
+                if (s.result) return s.result.toUpperCase();
+                let total = (s.dice1 || 0) + (s.dice2 || 0) + (s.dice3 || 0) || (s.point || 0);
+                return total > 10 ? 'TÀI' : 'XỈU';
+            });
+
+            // Gọi thuật toán nâng cấp phân tích cầu
+            let predict = analyzeAdvancedPattern(history);
+
+            // Kiểm tra nếu Admin cố định kết quả
+            if (adminOverride !== 'AUTO') {
+                predict.result = adminOverride;
+                predict.rate = 99;
+                predict.pattern = 'Chuyển Admin';
+            }
+
+            // Cập nhật giao diện Robot
+            document.getElementById('robo-phien').innerText = '#' + currentSessionId;
+            const kqElem = document.getElementById('robo-kq');
+            kqElem.innerText = predict.result;
+            kqElem.style.color = predict.result === 'TÀI' ? '#e3001b' : '#00aee0';
+            
+            document.getElementById('robo-tyle').innerText = `${predict.pattern} (${predict.rate}%)`;
+        }
+
+        // ----------------------------------------------------
+        // THUẬT TOÁN SOI CẦU NÂNG CẤP (BỆT, 1-1, 2-2, 1-2-3, BẺ CẦU)
+        // ----------------------------------------------------
+        function analyzeAdvancedPattern(history) {
+            if (history.length < 3) return { result: 'TÀI', rate: 75, pattern: 'Dò Cầu' };
+
+            const r1 = history[0], r2 = history[1], r3 = history[2], r4 = history[3];
+
+            // 1. Cầu Bệt (3 phiên liên tiếp cùng 1 kết quả)
+            if (r1 === r2 && r2 === r3) {
+                if (r3 === r4) {
+                    return { result: r1, rate: 89, pattern: 'Bệt Dài' };
+                }
+                return { result: r1, rate: 84, pattern: 'Cầu Bệt' };
+            }
+
+            // 2. Cầu 1-1 (Thay đổi xen kẽ: T - X - T - X)
+            if (r1 !== r2 && r2 !== r3 && r3 !== r4) {
+                const nextRes = (r1 === 'TÀI') ? 'XỈU' : 'TÀI';
+                return { result: nextRes, rate: 86, pattern: 'Cầu 1-1' };
+            }
+
+            // 3. Cầu 2-2 (Đôi một: T - T - X - X)
+            if (r1 === r2 && r3 === r4 && r1 !== r3) {
+                const nextRes = (r1 === 'TÀI') ? 'XỈU' : 'TÀI';
+                return { result: nextRes, rate: 82, pattern: 'Cầu 2-2' };
+            }
+
+            // 4. Phân tích xác suất nghiêng cầu (Bẻ Cầu)
+            const taiCount = history.slice(0, 6).filter(x => x === 'TÀI').length;
+            if (taiCount >= 5) {
+                return { result: 'XỈU', rate: 80, pattern: 'Nghiêng Xỉu' };
+            } else if (taiCount <= 1) {
+                return { result: 'TÀI', rate: 80, pattern: 'Nghiêng Tài' };
+            }
+
+            // 5. Cầu đảo mặc định
+            const nextDefault = (r1 === 'TÀI') ? 'XỈU' : 'TÀI';
+            return { result: nextDefault, rate: 78, pattern: 'Cầu Đảo' };
+        }
+
+        // Chức năng Admin Can Thiệp
+        function forceResult(val) {
+            adminOverride = val;
+            fetchGameAPI();
+        }
+
+        // Các hàm giao diện phụ
         function toggleRoboMenu() {
             const menu = document.getElementById('robo-menu');
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -275,10 +372,7 @@
             location.reload();
         }
 
-        // ----------------------------------------------------
-        // LOGIC KÉO THẢ CHỈ KHI ĐÈ VÀO ẢNH ROBOT (#drag-handle)
-        // VÀ BẤM NHẸ VÀO ROBOT ĐỂ ẨN/HIỆN BẢNG DỰ ĐOÁN BÊN CẠNH
-        // ----------------------------------------------------
+        // KÉO THẢ VÀ HIỂN THỊ ROBOT
         const robot = document.getElementById('draggable-robot');
         const dragHandle = document.getElementById('drag-handle');
         const dialogPanel = document.getElementById('robo-dialog-panel');
@@ -294,18 +388,16 @@
             robot.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${scale})`;
         }
 
-        // Bắt sự kiện chuột (PC)
         dragHandle.addEventListener("mousedown", dragStart);
         document.addEventListener("mousemove", drag);
         document.addEventListener("mouseup", dragEnd);
 
-        // Bắt sự kiện cảm ứng (Mobile)
         dragHandle.addEventListener("touchstart", dragStart, { passive: false });
         document.addEventListener("touchmove", drag, { passive: false });
         document.addEventListener("touchend", dragEnd);
 
         function dragStart(e) {
-            if (e.target !== dragHandle) return; // CHỈ CHO PHÉP KÉO KHI CHẠM VÀO ẢNH ROBOT
+            if (e.target !== dragHandle) return;
 
             if (e.type === "touchstart") {
                 startX = e.touches[0].clientX;
@@ -350,7 +442,6 @@
             isDragging = false;
         }
 
-        // Bấm nhẹ vào ảnh Robot để Bật / Tắt Bảng dự đoán
         dragHandle.addEventListener("click", () => {
             if (!hasMoved) {
                 dialogPanel.style.display = (dialogPanel.style.display === 'none') ? 'block' : 'none';
@@ -358,5 +449,4 @@
         });
     </script>
 </body>
-                </html>
-    
+</html>
