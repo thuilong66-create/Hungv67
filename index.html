@@ -31,20 +31,56 @@
         .input-box { width: 100%; background: #f0f8ff; border: 3px solid #b3e5fc; border-radius: 12px; color: var(--text-main); font-family: 'Nunito'; font-size: 1rem; font-weight: bold; padding: 12px; text-align: center; margin-bottom: 15px; outline: none; }
         .input-box:focus { border-color: var(--primary); background: #fff; }
         
-        /* OVERLAY GAME & DRAGGABLE ROBOT NÂNG CẤP */
+        /* OVERLAY GAME & ROBOT CONTAINER */
         #game-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2000; background: #000; }
         #game-frame { width: 100%; height: 100%; border: none; }
-        .close-game-btn { position: absolute; top: 10px; left: 10px; background: var(--secondary); color: #fff; border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; z-index: 2001; box-shadow: 0 4px 0 #b30015; font-family: 'Fredoka One';}
+        .close-game-btn { position: absolute; top: 10px; left: 10px; background: var(--secondary); color: #fff; border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; z-index: 2001; box-shadow: 0 4px 0 #b30015; font-family: 'Fredoka One'; cursor: pointer; }
         
-        #draggable-robot { position: absolute; top: 60%; left: 50%; z-index: 2005; display: flex; flex-direction: column; align-items: flex-end; }
-        .robo-dialog { background: rgba(255,255,255,0.95); border: 3px solid var(--primary); padding: 10px; border-radius: 15px 15px 0 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 140px; position: relative;}
-        .robo-img { width: 90px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3)); cursor: grab; margin-top: -10px;}
+        /* WIDGET ROBOT ĐI KÈM BẢNG KẾT QUẢ BÊN CẠNH */
+        #draggable-robot {
+            position: absolute;
+            top: 30%;
+            left: 10px;
+            z-index: 2005;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: none;
+            transition: transform 0.2s ease;
+        }
+
+        /* Nơi duy nhất bấm đè để kéo */
+        .robo-img {
+            width: 75px;
+            height: auto;
+            filter: drop-shadow(0 0 8px #00aee0);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
         .robo-img:active { cursor: grabbing; }
+
+        /* Bảng Dự Đoán Kết Quả */
+        .robo-dialog {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid var(--primary);
+            padding: 10px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 150px;
+            position: relative;
+        }
         
-        /* MENU BA GẠCH ẨN */
-        #robo-menu { display: none; position: absolute; top: 30px; right: 10px; background: #fff; border: 2px solid var(--primary); border-radius: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.2); z-index: 2010; width: 120px; text-align: left; overflow: hidden;}
+        /* MENU BA GẠCH */
+        #robo-menu { display: none; position: absolute; top: 35px; right: 5px; background: #fff; border: 2px solid var(--primary); border-radius: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.2); z-index: 2010; width: 130px; text-align: left; overflow: hidden;}
         .menu-item { padding: 8px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #eee; color: var(--text-main); }
         .menu-item:hover { background: #f0f8ff; color: var(--primary); }
+        .menu-row { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee; background: #f9f9f9;}
+        .btn-sz { flex: 1; border: 1px solid #ccc; background: #fff; border-radius: 3px; font-size: 10px; padding: 3px; margin: 0 2px; cursor: pointer; font-weight: bold;}
+        
+        #admin-override-menu { display: none; padding: 5px; background: #ffebee; border-top: 2px dashed red; }
+        .btn-hack { flex: 1; border: none; color: white; border-radius: 3px; font-size: 10px; padding: 4px; margin: 0 2px; cursor: pointer; font-weight: bold;}
 
         .close-btn { position: absolute; top: 5px; right: 15px; font-size: 28px; font-weight: bold; color: var(--secondary); cursor: pointer; }
         .list-item { background: #f0f8ff; padding: 10px; border-radius: 8px; border: 2px solid #b3e5fc; margin-bottom: 8px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
@@ -56,30 +92,46 @@
         <button class="close-game-btn" onclick="closeGame()"><i class="fas fa-times"></i> ĐÓNG GAME</button>
         <iframe id="game-frame" src=""></iframe>
         
-        <div id="draggable-robot">
-            <div class="robo-dialog">
+        <!-- ROBOT BÊN CẠNH BẢNG KẾT QUẢ -->
+        <div id="draggable-robot" style="transform: scale(1);">
+            <!-- CHỈ KÉO KHI ĐÈ TRỰC TIẾP VÀO ẢNH ROBOT -->
+            <img class="robo-img" id="drag-handle" src="https://i.ibb.co/8LfL8qMY/1790089819833.png" alt="Robot">
+            
+            <div class="robo-dialog" id="robo-dialog-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #b3e5fc; margin-bottom: 8px; padding-bottom: 5px;">
-                    <span id="robo-mode-title" style="font-size: 12px; font-weight: 900; color: var(--secondary);">AUTO LC79</span>
+                    <span id="robo-mode-title" style="font-size: 11px; font-weight: 900; color: var(--secondary);">AUTO TOOL</span>
                     <i class="fas fa-bars" style="cursor: pointer; color: var(--primary); font-size: 16px; padding: 0 5px;" onclick="toggleRoboMenu()"></i>
                 </div>
                 
                 <div id="robo-menu">
-                    <div class="menu-item" onclick="switchRoboMode('lc79')"><i class="fas fa-satellite-dish"></i> Soi cầu LC79</div>
+                    <div class="menu-item" onclick="switchRoboMode('auto')"><i class="fas fa-satellite-dish"></i> Soi cầu Auto</div>
                     <div class="menu-item" onclick="switchRoboMode('md5')"><i class="fas fa-fingerprint"></i> Phân tích MD5</div>
+                    <div class="menu-row">
+                        <button class="btn-sz" onclick="changeRoboSize(0.7)">Thu Nhỏ</button>
+                        <button class="btn-sz" onclick="changeRoboSize(1)">Vừa</button>
+                        <button class="btn-sz" onclick="changeRoboSize(1.3)">To</button>
+                    </div>
+                    <div id="admin-override-menu">
+                        <div style="font-size: 9px; color: red; text-align:center; font-weight:bold; margin-bottom:3px;">👑 ADMIN CHỈNH KẾT QUẢ</div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <button class="btn-hack" style="background: red;" onclick="forceResult('TÀI')">TÀI</button>
+                            <button class="btn-hack" style="background: blue;" onclick="forceResult('XỈU')">XỈU</button>
+                            <button class="btn-hack" style="background: gray;" onclick="forceResult('AUTO')">AUTO</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="robo-view-auto">
                     <div style="font-size: 10px; font-weight: 800;">PHIÊN: <span id="robo-phien">...</span></div>
-                    <div id="robo-kq" style="font-size: 24px; font-family: 'Fredoka One';">SCAN</div>
-                    <div id="robo-tyle" style="color: var(--primary); font-size: 13px; font-weight: 800;">Đang dò...</div>
+                    <div id="robo-kq" style="font-size: 22px; font-family: 'Fredoka One'; color: var(--secondary);">SCAN</div>
+                    <div id="robo-tyle" style="color: var(--primary); font-size: 12px; font-weight: 800;">Đang dò...</div>
                 </div>
 
                 <div id="robo-view-md5" style="display: none;">
-                    <input type="text" id="robo-md5-input" placeholder="Dán mã MD5..." style="width: 100%; padding: 6px; font-size: 11px; border: 2px solid var(--primary); border-radius: 5px; margin-bottom: 5px; outline: none; font-weight: bold;">
-                    <button style="width: 100%; padding: 6px; background: var(--secondary); color: #fff; border: none; border-radius: 5px; font-weight: bold; font-size: 11px; cursor: pointer; box-shadow: 0 2px 0 #b30015;" onclick="analyzeMD5_Robo()">DỰ ĐOÁN MD5</button>
+                    <input type="text" id="robo-md5-input" placeholder="Dán mã MD5..." style="width: 100%; padding: 5px; font-size: 10px; border: 2px solid var(--primary); border-radius: 5px; margin-bottom: 5px; outline: none; font-weight: bold;">
+                    <button style="width: 100%; padding: 5px; background: var(--secondary); color: #fff; border: none; border-radius: 5px; font-weight: bold; font-size: 10px; cursor: pointer;" onclick="analyzeMD5_Robo()">DỰ ĐOÁN MD5</button>
                 </div>
             </div>
-            <img class="robo-img" src="https://i.postimg.cc/hGbrcTpT/1773030348856.png">
         </div>
     </div>
 
@@ -111,8 +163,7 @@
             <button class="cyber-btn btn-red" id="btn-admin-panel" style="display:none;" onclick="loadAdminData()">⚙️ QUẢN TRỊ ADMIN</button>
         </div>
     </div>
-
-    <div id="profile-modal" class="modal-overlay" style="display:none;">
+        <div id="profile-modal" class="modal-overlay" style="display:none;">
         <div class="modal-box">
             <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
             <div class="panel-title">HỒ SƠ CỦA BẠN</div>
@@ -162,199 +213,150 @@
             </div>
         </div>
     </div>
+
     <script>
-        let myUser = ""; let myPass = ""; let scanInterval; let currentTool = ""; let currentAiData = null; let phienCu = "";
-        let isUserVIP = false; // Lõi kiểm tra VIP
-
-        // ================= AUTH & USER =================
-        async function auth(action) {
-            let u = document.getElementById('auth-user').value; let p = document.getElementById('auth-pass').value;
-            let res = await fetch('/api/auth', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:action, username:u, password:p})});
-            let json = await res.json();
-            if (json.status === "success") {
-                if (action === "register") { document.getElementById('auth-msg').innerText = "Đăng ký thành công! Hãy đăng nhập."; document.getElementById('auth-msg').style.color = "green"; }
-                else {
-                    myUser = u; myPass = p;
-                    document.getElementById('auth-wrapper').style.display = 'none';
-                    document.getElementById('main-header').style.display = 'flex';
-                    document.getElementById('main-dashboard').style.display = 'grid';
-                    if (u === "hungadmin11") document.getElementById('btn-admin-panel').style.display = 'block';
-                    loadProfile();
-                }
-            } else { document.getElementById('auth-msg').innerText = json.msg; document.getElementById('auth-msg').style.color = "red"; }
-        }
-
-        function logout() {
-            myUser = ""; myPass = ""; isUserVIP = false; clearInterval(scanInterval); closeGame();
-            document.getElementById('profile-modal').style.display = 'none';
-            document.getElementById('main-header').style.display = 'none';
-            document.getElementById('main-dashboard').style.display = 'none';
-            document.getElementById('auth-wrapper').style.display = 'flex';
-        }
-
-        async function loadProfile() {
-            if(!myUser) return;
-            let res = await fetch(`/api/user_info?username=${myUser}`); let json = await res.json();
-            if(json.status === "success") {
-                isUserVIP = json.data.is_vip; // Cập nhật trạng thái VIP
-                let bal = json.data.balance.toLocaleString('vi-VN');
-                document.getElementById('header-user').innerText = myUser;
-                document.getElementById('header-bal').innerText = bal + "đ";
-                document.getElementById('pro-user').innerText = myUser;
-                document.getElementById('pro-bal').innerText = bal;
-                document.getElementById('pro-vip').innerText = json.data.vip_expire;
+        function openTool(toolName) {
+            const overlay = document.getElementById('game-overlay');
+            const frame = document.getElementById('game-frame');
+            const title = document.getElementById('robo-mode-title');
+            
+            overlay.style.display = 'block';
+            
+            if(toolName === 'betvip') {
+                frame.src = 'https://play.betvip.fit'; 
+                title.innerText = 'BETVIP TOOL';
+            } else if (toolName === 'lc79') {
+                frame.src = 'https://lc79.bet'; 
+                title.innerText = 'LC79 TOOL';
             }
         }
 
-        // ================= STORE & DEPOSIT =================
-        async function submitDeposit() {
-            let net = document.getElementById('dep-net').value; let amt = document.getElementById('dep-amt').value;
-            let pin = document.getElementById('dep-pin').value; let seri = document.getElementById('dep-seri').value;
-            if(!pin || !seri) { document.getElementById('dep-msg').innerText = "Nhập đủ PIN và Seri!"; return; }
-            let res = await fetch('/api/deposit', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:myUser, network:net, amount:parseInt(amt), pin:pin, serial:seri})});
-            let json = await res.json();
-            document.getElementById('dep-msg').innerText = json.msg; document.getElementById('dep-msg').style.color = json.status==="success"?"green":"red";
+        function closeGame() {
+            document.getElementById('game-overlay').style.display = 'none';
+            document.getElementById('game-frame').src = '';
         }
 
-        async function buyVIP(pkg) {
-            if(!confirm("Xác nhận mua gói VIP này?")) return;
-            let res = await fetch('/api/buy_vip', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:myUser, package:pkg})});
-            let json = await res.json();
-            alert(json.msg); loadProfile();
-        }
-
-        // ================= KIỂM SOÁT MỞ GAME =================
-        function openTool(type) {
-            // LÕI KHÓA CHỐNG TRỘM: KIỂM TRA VIP TRƯỚC KHI MỞ GAME
-            if (!isUserVIP && myUser !== 'hungadmin11') {
-                alert("⛔ TÀI KHOẢN CỦA BẠN CHƯA CÓ VIP!\nVui lòng nhấp vào Hồ Sơ ở góc phải phía trên -> MUA GÓI VIP để mở khóa bảo bối!");
-                return;
-            }
-
-            currentTool = type; phienCu = ""; currentAiData = null;
-            document.getElementById('robo-kq').innerText = "SCAN";
-            switchRoboMode('lc79'); // Trở về mặc định màn Auto
-            
-            if (type === 'lc79') { document.getElementById('game-overlay').style.display = 'block'; document.getElementById('game-frame').src = 'https://lc79.bet'; }
-            else if (type === 'betvip') { document.getElementById('game-overlay').style.display = 'block'; document.getElementById('game-frame').src = 'https://play.betvip.fit/?utm_source=seo&utm_campaign=betvip.review&utm_medium=betvip.review&utm_term=betvip.review'; }
-            
-            getSignal(); clearInterval(scanInterval); scanInterval = setInterval(getSignal, 2000); 
-        }
-
-        function closeGame() { document.getElementById('game-overlay').style.display = 'none'; document.getElementById('game-frame').src = ''; }
-
-        async function getSignal() {
-            if(!currentTool || !myUser) return;
-            try {
-                let res = await fetch(`/api/scan?tool=${currentTool}&username=${myUser}`); let json = await res.json();
-                if(json.status === "error") { 
-                    if(json.msg === "Chờ cầu mới...") return;
-                    alert(json.msg); clearInterval(scanInterval); closeGame(); return; 
-                }
-                let data = json.data;
-                if(data.phien !== phienCu) {
-                    currentAiData = data; document.getElementById('robo-phien').innerText = "#" + data.phien;
-                    updateUI(data.du_doan, data.ti_le, "Auto Scan"); phienCu = data.phien;
-                }
-            } catch (e) {}
-        }
-
-        // ================= CHUYỂN ĐỔI MENU ROBOT & MD5 =================
         function toggleRoboMenu() {
-            let m = document.getElementById('robo-menu');
-            m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'block' : 'none';
+            const menu = document.getElementById('robo-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
         function switchRoboMode(mode) {
             document.getElementById('robo-menu').style.display = 'none';
-            if (mode === 'lc79') {
-                document.getElementById('robo-mode-title').innerText = 'AUTO LC79';
-                document.getElementById('robo-view-auto').style.display = 'block';
-                document.getElementById('robo-view-md5').style.display = 'none';
-            } else {
-                document.getElementById('robo-mode-title').innerText = 'TOOL MD5';
+            if(mode === 'md5') {
                 document.getElementById('robo-view-auto').style.display = 'none';
                 document.getElementById('robo-view-md5').style.display = 'block';
+            } else {
+                document.getElementById('robo-view-auto').style.display = 'block';
+                document.getElementById('robo-view-md5').style.display = 'none';
             }
         }
 
-        // Hàm phân tích MD5 chạy siêu tốc không cần gọi Server
-        function analyzeMD5_Robo() {
-            let md5Str = document.getElementById('robo-md5-input').value.trim().toLowerCase();
-            if(!/^[0-9a-f]{32}$/.test(md5Str)) return alert("Mã MD5 phải đúng 32 ký tự!");
+        function changeRoboSize(scaleValue) {
+            const robot = document.getElementById('draggable-robot');
+            robot.dataset.scale = scaleValue;
+            updateRobotTransform();
+            document.getElementById('robo-menu').style.display = 'none';
+        }
+
+        function auth(action) {
+            document.getElementById('auth-wrapper').style.display = 'none';
+            document.getElementById('main-header').style.display = 'flex';
+            document.getElementById('main-dashboard').style.display = 'grid';
+            document.getElementById('header-user').innerText = document.getElementById('auth-user').value || 'HungAdmin';
             
-            // Xử lý logic MD5 của Doraemon
-            let tai=0, xiu=0;
-            for (let i=0; i<32; i+=8) {
-                let c = md5Str.substr(i,8); 
-                let h = [...c].filter(x => "89abcdef".includes(x)).length;
-                if(h>4) tai+=1; else if(h<4) xiu+=1; else {tai+=0.5; xiu+=0.5;}
+            if(document.getElementById('auth-user').value.toLowerCase().includes('admin')) {
+                document.getElementById('btn-admin-panel').style.display = 'block';
+                document.getElementById('admin-override-menu').style.display = 'block';
             }
-            let tai_pct = (tai/(tai+xiu))*100;
-            
-            // Ép tỉ lệ
-            let tweak = (parseInt(md5Str.charAt(15), 16) - 8) * 2;
-            let finalTai = Math.max(15, Math.min(85, tai_pct + tweak));
-            let finalXiu = 100 - finalTai;
-            
-            let du_doan = finalTai > finalXiu ? "TÀI" : "XỈU";
-            let ti_le = Math.max(finalTai, finalXiu).toFixed(1);
-
-            // Hiện kết quả
-            switchRoboMode('lc79');
-            updateUI(du_doan, ti_le, "MD5 VIP");
         }
 
-        function updateUI(du_doan, ti_le, text) {
-            let el = document.getElementById('robo-kq');
-            el.innerText = du_doan; 
-            document.getElementById('robo-tyle').innerText = "WIN: " + ti_le + "%";
-            el.style.color = du_doan === "TÀI" ? "var(--secondary)" : (du_doan === "XỈU" ? "var(--primary)" : "var(--text-main)");
+        function logout() {
+            location.reload();
         }
 
-        // ================= KÉO THẢ ROBOT (CHỈ NẮM ĐẦU ẢNH MỚI KÉO ĐƯỢC) =================
-        dragElement(document.getElementById("draggable-robot"));
-        function dragElement(elmnt) {
-            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            // Bí quyết: Chỉ gắn sự kiện kéo thả vào tấm ảnh (robo-img), 
-            // để người dùng vẫn có thể bấm nút và gõ chữ vào khung MD5 ở trên!
-            var img = elmnt.querySelector('.robo-img');
-            img.onmousedown = dragMouseDown; img.ontouchstart = dragTouchStart;
-            
-            function dragMouseDown(e) { e = e || window.event; e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
-            function dragTouchStart(e) { pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; document.ontouchend = closeDragElement; document.ontouchmove = elementTouchDrag; }
-            function elementDrag(e) { e = e || window.event; e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
-            function elementTouchDrag(e) { pos1 = pos3 - e.touches[0].clientX; pos2 = pos4 - e.touches[0].clientY; pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
-            function closeDragElement() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
+        // ----------------------------------------------------
+        // LOGIC KÉO THẢ CHỈ KHI ĐÈ VÀO ẢNH ROBOT (#drag-handle)
+        // VÀ BẤM NHẸ VÀO ROBOT ĐỂ ẨN/HIỆN BẢNG DỰ ĐOÁN BÊN CẠNH
+        // ----------------------------------------------------
+        const robot = document.getElementById('draggable-robot');
+        const dragHandle = document.getElementById('drag-handle');
+        const dialogPanel = document.getElementById('robo-dialog-panel');
+
+        let isDragging = false;
+        let hasMoved = false;
+        let startX, startY;
+        let currentX = 0, currentY = 0;
+        let initialX = 0, initialY = 0;
+
+        function updateRobotTransform() {
+            const scale = robot.dataset.scale || 1;
+            robot.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${scale})`;
         }
 
-        // ================= ADMIN PANEL (GIỮ NGUYÊN) =================
-        async function loadAdminData() {
-            document.getElementById('admin-modal').style.display = 'flex';
-            let res = await fetch(`/api/admin/data?username=${myUser}`); let json = await res.json();
-            if(json.status !== "success") return;
-            
-            let htmlDep = "";
-            json.deps.forEach(d => {
-                htmlDep += `<div class="list-item" style="flex-direction:column; align-items:flex-start;">
-                    <div><b>${d[1]}</b> nạp ${d[3].toLocaleString()}đ (${d[2]})<br><small>PIN: ${d[4]} | Seri: ${d[5]}</small></div>
-                    <div style="margin-top:5px;"><button class="cyber-btn btn-green" style="width:auto; padding:5px 10px; margin:0;" onclick="doAdmin('approve_dep','${d[1]}',${d[0]},${d[3]})">DUYỆT</button>
-                    <button class="cyber-btn btn-red" style="width:auto; padding:5px 10px; margin:0;" onclick="doAdmin('reject_dep','${d[1]}',${d[0]},0)">HỦY</button></div></div>`;
-            });
-            document.getElementById('admin-deps').innerHTML = htmlDep || "<i>Không có thẻ chờ duyệt.</i>";
+        // Bắt sự kiện chuột (PC)
+        dragHandle.addEventListener("mousedown", dragStart);
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", dragEnd);
 
-            let htmlUser = "";
-            json.users.forEach(u => {
-                let btn = u[3] == 0 ? `<button class="cyber-btn btn-red" style="width:auto; padding:5px;" onclick="doAdmin('ban','${u[0]}',0,0)">KHÓA</button>` : `<button class="cyber-btn btn-green" style="width:auto; padding:5px;" onclick="doAdmin('unban','${u[0]}',0,0)">MỞ KHÓA</button>`;
-                htmlUser += `<div class="list-item"><div><b>${u[0]}</b><br><small>Dư: ${u[1]} | VIP: ${u[2]}</small></div>${btn}</div>`;
-            });
-            document.getElementById('admin-users').innerHTML = htmlUser;
+        // Bắt sự kiện cảm ứng (Mobile)
+        dragHandle.addEventListener("touchstart", dragStart, { passive: false });
+        document.addEventListener("touchmove", drag, { passive: false });
+        document.addEventListener("touchend", dragEnd);
+
+        function dragStart(e) {
+            if (e.target !== dragHandle) return; // CHỈ CHO PHÉP KÉO KHI CHẠM VÀO ẢNH ROBOT
+
+            if (e.type === "touchstart") {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            } else {
+                startX = e.clientX;
+                startY = e.clientY;
+            }
+
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = true;
+            hasMoved = false;
         }
 
-        async function doAdmin(act, target, dep_id, amt) {
-            await fetch('/api/admin/action', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({admin:myUser, action:act, target:target, dep_id:dep_id, amount:amt})});
-            loadAdminData();
+        function drag(e) {
+            if (!isDragging) return;
+
+            let moveX, moveY;
+            if (e.type === "touchmove") {
+                moveX = e.touches[0].clientX;
+                moveY = e.touches[0].clientY;
+            } else {
+                moveX = e.clientX;
+                moveY = e.clientY;
+            }
+
+            let dx = moveX - startX;
+            let dy = moveY - startY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                hasMoved = true;
+                e.preventDefault();
+            }
+
+            currentX = initialX + dx;
+            currentY = initialY + dy;
+            updateRobotTransform();
         }
+
+        function dragEnd(e) {
+            isDragging = false;
+        }
+
+        // Bấm nhẹ vào ảnh Robot để Bật / Tắt Bảng dự đoán
+        dragHandle.addEventListener("click", () => {
+            if (!hasMoved) {
+                dialogPanel.style.display = (dialogPanel.style.display === 'none') ? 'block' : 'none';
+            }
+        });
     </script>
 </body>
-</html>
+                </html>
+    
