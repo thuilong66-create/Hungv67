@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BẢO BỐI DỰ ĐOÁN - HƯNG ADMIN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00aee0; --secondary: #e3001b; --accent: #ffd900; --text-main: #333333; --bg-gradient: linear-gradient(135deg, #87ceeb 0%, #e0f7fa 100%); --panel-bg: #ffffff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg-gradient); color: var(--text-main); overflow-x: hidden; min-height: 100vh; }
+        
+        header { height: 65px; background: var(--primary); border-bottom: 4px solid var(--secondary); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo { display: flex; align-items: center; gap: 8px; font-family: 'Fredoka One'; font-size: 1.1rem; color: #fff; text-shadow: 2px 2px 0px rgba(0,0,0,0.2); }
+        .profile-badge { background: #fff; border: 2px solid var(--secondary); color: var(--secondary); padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end;}
+        
+        #auth-wrapper, .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(5px); background: rgba(0,0,0,0.6); }
+        .auth-box, .modal-box { background: var(--panel-bg); border: 4px solid var(--primary); border-radius: 25px; padding: 25px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        
+        #main-dashboard { display: none; grid-template-columns: 1fr; gap: 15px; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .panel { background: var(--panel-bg); border: 4px solid var(--primary); border-radius: 25px; padding: 20px; box-shadow: 0 5px 15px rgba(0, 174, 224, 0.15); }
+        .panel-title { font-family: 'Fredoka One'; font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px dashed #b3e5fc; padding-bottom: 10px;}
+        
+        .cyber-btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Fredoka One'; font-size: 14px; color: #fff; width: 100%; margin-bottom: 10px; background: var(--primary); box-shadow: 0 4px 0 #008fba; transition: 0.1s; }
+        .cyber-btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-red { background: var(--secondary); box-shadow: 0 4px 0 #b30015; }
+        .btn-yellow { background: var(--accent); color: var(--text-main); box-shadow: 0 4px 0 #cca800; }
+        .btn-green { background: #2ecc71; box-shadow: 0 4px 0 #27ae60; }
+        
+        .input-box { width: 100%; background: #f0f8ff; border: 3px solid #b3e5fc; border-radius: 12px; color: var(--text-main); font-family: 'Nunito'; font-size: 1rem; font-weight: bold; padding: 12px; text-align: center; margin-bottom: 15px; outline: none; }
+        .input-box:focus { border-color: var(--primary); background: #fff; }
+        
+        /* OVERLAY GAME & DRAGGABLE ROBOT NÂNG CẤP */
+        #game-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2000; background: #000; }
+        #game-frame { width: 100%; height: 100%; border: none; }
+        .close-game-btn { position: absolute; top: 10px; left: 10px; background: var(--secondary); color: #fff; border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; z-index: 2001; box-shadow: 0 4px 0 #b30015; font-family: 'Fredoka One';}
+        
+        #draggable-robot { position: absolute; top: 60%; left: 50%; z-index: 2005; display: flex; flex-direction: column; align-items: flex-end; }
+        .robo-dialog { background: rgba(255,255,255,0.95); border: 3px solid var(--primary); padding: 10px; border-radius: 15px 15px 0 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 140px; position: relative;}
+        .robo-img { width: 90px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3)); cursor: grab; margin-top: -10px;}
+        .robo-img:active { cursor: grabbing; }
+        
+        /* MENU BA GẠCH ẨN */
+        #robo-menu { display: none; position: absolute; top: 30px; right: 10px; background: #fff; border: 2px solid var(--primary); border-radius: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.2); z-index: 2010; width: 120px; text-align: left; overflow: hidden;}
+        .menu-item { padding: 8px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #eee; color: var(--text-main); }
+        .menu-item:hover { background: #f0f8ff; color: var(--primary); }
+
+        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 28px; font-weight: bold; color: var(--secondary); cursor: pointer; }
+        .list-item { background: #f0f8ff; padding: 10px; border-radius: 8px; border: 2px solid #b3e5fc; margin-bottom: 8px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+    </style>
+</head>
+<body>
+
+    <div id="game-overlay">
+        <button class="close-game-btn" onclick="closeGame()"><i class="fas fa-times"></i> ĐÓNG GAME</button>
+        <iframe id="game-frame" src=""></iframe>
+        
+        <div id="draggable-robot">
+            <div class="robo-dialog">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #b3e5fc; margin-bottom: 8px; padding-bottom: 5px;">
+                    <span id="robo-mode-title" style="font-size: 12px; font-weight: 900; color: var(--secondary);">AUTO LC79</span>
+                    <i class="fas fa-bars" style="cursor: pointer; color: var(--primary); font-size: 16px; padding: 0 5px;" onclick="toggleRoboMenu()"></i>
+                </div>
+                
+                <div id="robo-menu">
+                    <div class="menu-item" onclick="switchRoboMode('lc79')"><i class="fas fa-satellite-dish"></i> Soi cầu LC79</div>
+                    <div class="menu-item" onclick="switchRoboMode('md5')"><i class="fas fa-fingerprint"></i> Phân tích MD5</div>
+                </div>
+
+                <div id="robo-view-auto">
+                    <div style="font-size: 10px; font-weight: 800;">PHIÊN: <span id="robo-phien">...</span></div>
+                    <div id="robo-kq" style="font-size: 24px; font-family: 'Fredoka One';">SCAN</div>
+                    <div id="robo-tyle" style="color: var(--primary); font-size: 13px; font-weight: 800;">Đang dò...</div>
+                </div>
+
+                <div id="robo-view-md5" style="display: none;">
+                    <input type="text" id="robo-md5-input" placeholder="Dán mã MD5..." style="width: 100%; padding: 6px; font-size: 11px; border: 2px solid var(--primary); border-radius: 5px; margin-bottom: 5px; outline: none; font-weight: bold;">
+                    <button style="width: 100%; padding: 6px; background: var(--secondary); color: #fff; border: none; border-radius: 5px; font-weight: bold; font-size: 11px; cursor: pointer; box-shadow: 0 2px 0 #b30015;" onclick="analyzeMD5_Robo()">DỰ ĐOÁN MD5</button>
+                </div>
+            </div>
+            <img class="robo-img" src="https://i.postimg.cc/hGbrcTpT/1773030348856.png">
+        </div>
+    </div>
+
+    <div id="auth-wrapper">
+        <div class="auth-box" style="text-align: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/en/b/bd/Doraemon_character.png" style="width: 100px; margin-bottom: 10px;">
+            <div class="panel-title" style="border:none;">HỆ THỐNG DORAEMON</div>
+            <input type="text" id="auth-user" class="input-box" placeholder="Tài khoản...">
+            <input type="password" id="auth-pass" class="input-box" placeholder="Mật khẩu...">
+            <button class="cyber-btn" onclick="auth('login')">ĐĂNG NHẬP</button>
+            <button class="cyber-btn btn-yellow" onclick="auth('register')">ĐĂNG KÝ MỚI</button>
+            <div id="auth-msg" style="margin-top: 10px; font-weight:bold; color: var(--secondary);"></div>
+        </div>
+    </div>
+
+    <header id="main-header" style="display:none;">
+        <div class="logo"><img src="https://upload.wikimedia.org/wikipedia/en/b/bd/Doraemon_character.png" style="height: 35px;"> HƯNG ADMIN</div>
+        <div class="profile-badge" onclick="document.getElementById('profile-modal').style.display='flex'">
+            <span id="header-user">User</span>
+            <span style="color: var(--primary);" id="header-bal">0 VNĐ</span>
+        </div>
+    </header>
+
+    <div id="main-dashboard">
+        <div class="panel">
+            <div class="panel-title">TỌA ĐỘ SERVER</div>
+            <button class="cyber-btn btn-green" onclick="openTool('betvip')">👑 BET VIP (PLAY.BETVIP.FIT)</button>
+            <button class="cyber-btn" onclick="openTool('lc79')">📡 LC79.BET</button>
+            <button class="cyber-btn btn-red" id="btn-admin-panel" style="display:none;" onclick="loadAdminData()">⚙️ QUẢN TRỊ ADMIN</button>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
+            <div class="panel-title">HỒ SƠ CỦA BẠN</div>
+            <div style="text-align:center; font-weight:bold; margin-bottom: 15px;">
+                Tài khoản: <span id="pro-user" style="color:var(--primary);"></span><br>
+                Số dư: <span id="pro-bal" style="color:var(--secondary); font-size:18px;"></span> VNĐ<br>
+                HSD VIP: <span id="pro-vip" style="color:green;"></span>
+            </div>
+            <button class="cyber-btn btn-green" onclick="document.getElementById('deposit-modal').style.display='flex'">💵 NẠP THẺ CÀO</button>
+            <button class="cyber-btn btn-yellow" onclick="document.getElementById('store-modal').style.display='flex'">🛒 MUA GÓI VIP</button>
+            <button class="cyber-btn btn-red" onclick="logout()">ĐĂNG XUẤT</button>
+        </div>
+    </div>
+
+    <div id="deposit-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
+            <div class="panel-title">NẠP THẺ CÀO</div>
+            <select id="dep-net" class="input-box"><option value="VIETTEL">Viettel</option><option value="VINAPHONE">Vinaphone</option><option value="MOBIFONE">Mobifone</option></select>
+            <select id="dep-amt" class="input-box"><option value="30000">30,000</option><option value="50000">50,000</option><option value="100000">100,000</option><option value="200000">200,000</option></select>
+            <input type="text" id="dep-pin" class="input-box" placeholder="Mã thẻ (PIN)">
+            <input type="text" id="dep-seri" class="input-box" placeholder="Số Serial">
+            <button class="cyber-btn btn-green" onclick="submitDeposit()">GỬI THẺ</button>
+            <div id="dep-msg" style="text-align:center; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <div id="store-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
+            <div class="panel-title">CỬA HÀNG VIP</div>
+            <div class="list-item">1 Ngày VIP (30K) <button class="cyber-btn btn-yellow" style="width:auto; margin:0; padding:5px 10px;" onclick="buyVIP('1D')">MUA</button></div>
+            <div class="list-item">3 Ngày VIP (50K) <button class="cyber-btn btn-yellow" style="width:auto; margin:0; padding:5px 10px;" onclick="buyVIP('3D')">MUA</button></div>
+            <div class="list-item">1 Tuần VIP (100K) <button class="cyber-btn btn-yellow" style="width:auto; margin:0; padding:5px 10px;" onclick="buyVIP('7D')">MUA</button></div>
+            <div class="list-item">1 Tháng VIP (150K) <button class="cyber-btn btn-yellow" style="width:auto; margin:0; padding:5px 10px;" onclick="buyVIP('30D')">MUA</button></div>
+            <div class="list-item">VĨNH VIỄN (200K) <button class="cyber-btn btn-red" style="width:auto; margin:0; padding:5px 10px;" onclick="buyVIP('PERM')">MUA</button></div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="max-width: 500px;">
+            <div class="close-btn" onclick="this.parentElement.parentElement.style.display='none'">×</div>
+            <div class="panel-title" style="color:var(--secondary);">QUẢN TRỊ ADMIN</div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <h3 style="margin: 10px 0; color: green;">DUYỆT THẺ NẠP</h3><div id="admin-deps"></div>
+                <h3 style="margin: 10px 0; color: var(--primary);">QUẢN LÝ TÀI KHOẢN</h3><div id="admin-users"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let myUser = ""; let myPass = ""; let scanInterval; let currentTool = ""; let currentAiData = null; let phienCu = "";
+        let isUserVIP = false; // Lõi kiểm tra VIP
+
+        // ================= AUTH & USER =================
+        async function auth(action) {
+            let u = document.getElementById('auth-user').value; let p = document.getElementById('auth-pass').value;
+            let res = await fetch('/api/auth', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:action, username:u, password:p})});
+            let json = await res.json();
+            if (json.status === "success") {
+                if (action === "register") { document.getElementById('auth-msg').innerText = "Đăng ký thành công! Hãy đăng nhập."; document.getElementById('auth-msg').style.color = "green"; }
+                else {
+                    myUser = u; myPass = p;
+                    document.getElementById('auth-wrapper').style.display = 'none';
+                    document.getElementById('main-header').style.display = 'flex';
+                    document.getElementById('main-dashboard').style.display = 'grid';
+                    if (u === "hungadmin11") document.getElementById('btn-admin-panel').style.display = 'block';
+                    loadProfile();
+                }
+            } else { document.getElementById('auth-msg').innerText = json.msg; document.getElementById('auth-msg').style.color = "red"; }
+        }
+
+        function logout() {
+            myUser = ""; myPass = ""; isUserVIP = false; clearInterval(scanInterval); closeGame();
+            document.getElementById('profile-modal').style.display = 'none';
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'none';
+            document.getElementById('auth-wrapper').style.display = 'flex';
+        }
+
+        async function loadProfile() {
+            if(!myUser) return;
+            let res = await fetch(`/api/user_info?username=${myUser}`); let json = await res.json();
+            if(json.status === "success") {
+                isUserVIP = json.data.is_vip; // Cập nhật trạng thái VIP
+                let bal = json.data.balance.toLocaleString('vi-VN');
+                document.getElementById('header-user').innerText = myUser;
+                document.getElementById('header-bal').innerText = bal + "đ";
+                document.getElementById('pro-user').innerText = myUser;
+                document.getElementById('pro-bal').innerText = bal;
+                document.getElementById('pro-vip').innerText = json.data.vip_expire;
+            }
+        }
+
+        // ================= STORE & DEPOSIT =================
+        async function submitDeposit() {
+            let net = document.getElementById('dep-net').value; let amt = document.getElementById('dep-amt').value;
+            let pin = document.getElementById('dep-pin').value; let seri = document.getElementById('dep-seri').value;
+            if(!pin || !seri) { document.getElementById('dep-msg').innerText = "Nhập đủ PIN và Seri!"; return; }
+            let res = await fetch('/api/deposit', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:myUser, network:net, amount:parseInt(amt), pin:pin, serial:seri})});
+            let json = await res.json();
+            document.getElementById('dep-msg').innerText = json.msg; document.getElementById('dep-msg').style.color = json.status==="success"?"green":"red";
+        }
+
+        async function buyVIP(pkg) {
+            if(!confirm("Xác nhận mua gói VIP này?")) return;
+            let res = await fetch('/api/buy_vip', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:myUser, package:pkg})});
+            let json = await res.json();
+            alert(json.msg); loadProfile();
+        }
+
+        // ================= KIỂM SOÁT MỞ GAME =================
+        function openTool(type) {
+            // LÕI KHÓA CHỐNG TRỘM: KIỂM TRA VIP TRƯỚC KHI MỞ GAME
+            if (!isUserVIP && myUser !== 'hungadmin11') {
+                alert("⛔ TÀI KHOẢN CỦA BẠN CHƯA CÓ VIP!\nVui lòng nhấp vào Hồ Sơ ở góc phải phía trên -> MUA GÓI VIP để mở khóa bảo bối!");
+                return;
+            }
+
+            currentTool = type; phienCu = ""; currentAiData = null;
+            document.getElementById('robo-kq').innerText = "SCAN";
+            switchRoboMode('lc79'); // Trở về mặc định màn Auto
+            
+            if (type === 'lc79') { document.getElementById('game-overlay').style.display = 'block'; document.getElementById('game-frame').src = 'https://lc79.bet'; }
+            else if (type === 'betvip') { document.getElementById('game-overlay').style.display = 'block'; document.getElementById('game-frame').src = 'https://play.betvip.fit/?utm_source=seo&utm_campaign=betvip.review&utm_medium=betvip.review&utm_term=betvip.review'; }
+            
+            getSignal(); clearInterval(scanInterval); scanInterval = setInterval(getSignal, 2000); 
+        }
+
+        function closeGame() { document.getElementById('game-overlay').style.display = 'none'; document.getElementById('game-frame').src = ''; }
+
+        async function getSignal() {
+            if(!currentTool || !myUser) return;
+            try {
+                let res = await fetch(`/api/scan?tool=${currentTool}&username=${myUser}`); let json = await res.json();
+                if(json.status === "error") { 
+                    if(json.msg === "Chờ cầu mới...") return;
+                    alert(json.msg); clearInterval(scanInterval); closeGame(); return; 
+                }
+                let data = json.data;
+                if(data.phien !== phienCu) {
+                    currentAiData = data; document.getElementById('robo-phien').innerText = "#" + data.phien;
+                    updateUI(data.du_doan, data.ti_le, "Auto Scan"); phienCu = data.phien;
+                }
+            } catch (e) {}
+        }
+
+        // ================= CHUYỂN ĐỔI MENU ROBOT & MD5 =================
+        function toggleRoboMenu() {
+            let m = document.getElementById('robo-menu');
+            m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'block' : 'none';
+        }
+
+        function switchRoboMode(mode) {
+            document.getElementById('robo-menu').style.display = 'none';
+            if (mode === 'lc79') {
+                document.getElementById('robo-mode-title').innerText = 'AUTO LC79';
+                document.getElementById('robo-view-auto').style.display = 'block';
+                document.getElementById('robo-view-md5').style.display = 'none';
+            } else {
+                document.getElementById('robo-mode-title').innerText = 'TOOL MD5';
+                document.getElementById('robo-view-auto').style.display = 'none';
+                document.getElementById('robo-view-md5').style.display = 'block';
+            }
+        }
+
+        // Hàm phân tích MD5 chạy siêu tốc không cần gọi Server
+        function analyzeMD5_Robo() {
+            let md5Str = document.getElementById('robo-md5-input').value.trim().toLowerCase();
+            if(!/^[0-9a-f]{32}$/.test(md5Str)) return alert("Mã MD5 phải đúng 32 ký tự!");
+            
+            // Xử lý logic MD5 của Doraemon
+            let tai=0, xiu=0;
+            for (let i=0; i<32; i+=8) {
+                let c = md5Str.substr(i,8); 
+                let h = [...c].filter(x => "89abcdef".includes(x)).length;
+                if(h>4) tai+=1; else if(h<4) xiu+=1; else {tai+=0.5; xiu+=0.5;}
+            }
+            let tai_pct = (tai/(tai+xiu))*100;
+            
+            // Ép tỉ lệ
+            let tweak = (parseInt(md5Str.charAt(15), 16) - 8) * 2;
+            let finalTai = Math.max(15, Math.min(85, tai_pct + tweak));
+            let finalXiu = 100 - finalTai;
+            
+            let du_doan = finalTai > finalXiu ? "TÀI" : "XỈU";
+            let ti_le = Math.max(finalTai, finalXiu).toFixed(1);
+
+            // Hiện kết quả
+            switchRoboMode('lc79');
+            updateUI(du_doan, ti_le, "MD5 VIP");
+        }
+
+        function updateUI(du_doan, ti_le, text) {
+            let el = document.getElementById('robo-kq');
+            el.innerText = du_doan; 
+            document.getElementById('robo-tyle').innerText = "WIN: " + ti_le + "%";
+            el.style.color = du_doan === "TÀI" ? "var(--secondary)" : (du_doan === "XỈU" ? "var(--primary)" : "var(--text-main)");
+        }
+
+        // ================= KÉO THẢ ROBOT (CHỈ NẮM ĐẦU ẢNH MỚI KÉO ĐƯỢC) =================
+        dragElement(document.getElementById("draggable-robot"));
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            // Bí quyết: Chỉ gắn sự kiện kéo thả vào tấm ảnh (robo-img), 
+            // để người dùng vẫn có thể bấm nút và gõ chữ vào khung MD5 ở trên!
+            var img = elmnt.querySelector('.robo-img');
+            img.onmousedown = dragMouseDown; img.ontouchstart = dragTouchStart;
+            
+            function dragMouseDown(e) { e = e || window.event; e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
+            function dragTouchStart(e) { pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; document.ontouchend = closeDragElement; document.ontouchmove = elementTouchDrag; }
+            function elementDrag(e) { e = e || window.event; e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
+            function elementTouchDrag(e) { pos1 = pos3 - e.touches[0].clientX; pos2 = pos4 - e.touches[0].clientY; pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
+            function closeDragElement() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
+        }
+
+        // ================= ADMIN PANEL (GIỮ NGUYÊN) =================
+        async function loadAdminData() {
+            document.getElementById('admin-modal').style.display = 'flex';
+            let res = await fetch(`/api/admin/data?username=${myUser}`); let json = await res.json();
+            if(json.status !== "success") return;
+            
+            let htmlDep = "";
+            json.deps.forEach(d => {
+                htmlDep += `<div class="list-item" style="flex-direction:column; align-items:flex-start;">
+                    <div><b>${d[1]}</b> nạp ${d[3].toLocaleString()}đ (${d[2]})<br><small>PIN: ${d[4]} | Seri: ${d[5]}</small></div>
+                    <div style="margin-top:5px;"><button class="cyber-btn btn-green" style="width:auto; padding:5px 10px; margin:0;" onclick="doAdmin('approve_dep','${d[1]}',${d[0]},${d[3]})">DUYỆT</button>
+                    <button class="cyber-btn btn-red" style="width:auto; padding:5px 10px; margin:0;" onclick="doAdmin('reject_dep','${d[1]}',${d[0]},0)">HỦY</button></div></div>`;
+            });
+            document.getElementById('admin-deps').innerHTML = htmlDep || "<i>Không có thẻ chờ duyệt.</i>";
+
+            let htmlUser = "";
+            json.users.forEach(u => {
+                let btn = u[3] == 0 ? `<button class="cyber-btn btn-red" style="width:auto; padding:5px;" onclick="doAdmin('ban','${u[0]}',0,0)">KHÓA</button>` : `<button class="cyber-btn btn-green" style="width:auto; padding:5px;" onclick="doAdmin('unban','${u[0]}',0,0)">MỞ KHÓA</button>`;
+                htmlUser += `<div class="list-item"><div><b>${u[0]}</b><br><small>Dư: ${u[1]} | VIP: ${u[2]}</small></div>${btn}</div>`;
+            });
+            document.getElementById('admin-users').innerHTML = htmlUser;
+        }
+
+        async function doAdmin(act, target, dep_id, amt) {
+            await fetch('/api/admin/action', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({admin:myUser, action:act, target:target, dep_id:dep_id, amount:amt})});
+            loadAdminData();
+        }
+    </script>
+</body>
+</html>
