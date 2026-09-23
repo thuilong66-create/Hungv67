@@ -1,13 +1,12 @@
 """
 SERVER AI - HỆ THỐNG TOOL VIP
-Tương thích: FastAPI 0.95.2 + Pydantic 1.10.13
-Chắc chắn chạy trên Render Python 3.14
+Phiên bản cuối cùng: KHÔNG DÙNG PYDANTIC BASEMODEL
+Chắc chắn chạy trên mọi phiên bản Python
 """
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import requests
 import uvicorn
 import sqlite3
@@ -43,18 +42,18 @@ def khoi_tao_db():
             c.execute('''CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY, 
                 password TEXT, 
-                balance INTEGER, 
-                vip_expire DATETIME, 
-                is_banned INTEGER
+                balance INTEGER DEFAULT 0, 
+                vip_expire DATETIME DEFAULT '2000-01-01 00:00:00', 
+                is_banned INTEGER DEFAULT 0
             )''')
             c.execute('''CREATE TABLE IF NOT EXISTS deposits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, 
                 username TEXT, 
                 card_type TEXT, 
-                card_amount INTEGER, 
+                card_amount INTEGER DEFAULT 0, 
                 card_pin TEXT, 
                 card_serial TEXT, 
-                status TEXT
+                status TEXT DEFAULT 'PENDING'
             )''')
             c.execute(
                 "INSERT OR IGNORE INTO users (username, password, balance, vip_expire, is_banned) VALUES (?, ?, ?, ?, ?)",
@@ -83,7 +82,6 @@ def phan_tich_ai(kq_list):
     gan_nhat = kq_list[-5:]
     kq_cuoi = kq_list[-1]
     
-    # Đếm chuỗi lặp
     chuoi = 1
     for i in range(len(kq_list) - 2, -1, -1):
         if kq_list[i] == kq_cuoi:
@@ -91,18 +89,13 @@ def phan_tich_ai(kq_list):
         else:
             break
     
-    # 1. Dò cầu xen kẽ (T-X-T-X)
     if (gan_nhat == ["Tài", "Xỉu", "Tài", "Xỉu", "Tài"] or 
         gan_nhat == ["Xỉu", "Tài", "Xỉu", "Tài", "Xỉu"]):
         du_doan = "XỈU" if kq_cuoi == "Tài" else "TÀI"
         ty_le = round(random.uniform(88.0, 96.0), 1)
-    
-    # 2. Bẻ cầu bệt dài
     elif chuoi >= 4:
         du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
         ty_le = min(75 + chuoi * 4.5, 99.9)
-    
-    # 3. Mặc định
     else:
         du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
         ty_le = round(random.uniform(70.0, 82.0), 1)
@@ -114,29 +107,16 @@ def phan_tich_ai(kq_list):
         "tong_xiu": tong_xiu
     }
 
-# ================= MODEL PYDANTIC V1 (MỖI TRƯỜNG MỘT DÒNG) =================
-class AuthReq(BaseModel):
-    action: str
-    username: str
-    password: str
+# ================= HÀM KIỂM TRA DỮ LIỆU =================
+def get_str(data, key, default=""):
+    val = data.get(key, default)
+    return str(val).strip() if val else default
 
-class DepReq(BaseModel):
-    username: str
-    network: str
-    amount: int
-    pin: str
-    serial: str
-
-class BuyReq(BaseModel):
-    username: str
-    package: str
-
-class AdminActReq(BaseModel):
-    admin: str
-    action: str
-    target: str
-    dep_id: int = 0
-    amount: int = 0
+def get_int(data, key, default=0):
+    try:
+        return int(data.get(key, default))
+    except:
+        return default
 
 # ================= API ROUTES =================
 @app.get("/")
@@ -154,35 +134,36 @@ async def health_check():
 async def scan_game(tool: str, username: str):
     logger.info(f"🔍 Scan: {tool} - {username}")
     
-    # Kiểm tra tài khoản
     with get_db() as conn:
         c = conn.cursor()
         c.execute("SELECT vip_expire, is_banned FROM users WHERE username = ?", (username,))
         row = c.fetchone()
     
     if not row:
-        return {"status": "error", "msg": "Tài khoản không tồn tại!"}
+        return JSONResponse({"status": "error", "msg": "Tài khoản không tồn tại!"})
     if row[1] == 1 and username != "hungadmin11":
-        return {"status": "error", "msg": "Tài khoản đã bị Admin khóa!"}
+        return JSONResponse({"status": "error", "msg": "Tài khoản đã bị Admin khóa!"})
     if datetime.now() > datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S") and username != "hungadmin11":
-        return {"status": "error", "msg": "Gói VIP đã hết hạn! Vui lòng mua thêm."}
+        return JSONResponse({"status": "error", "msg": "Gói VIP đã hết hạn!"})
     
-    # Xác định URL
-    if tool == "lc79":
-        url = "https://wtx.tele68.com/v1/tx/lite-sessions"
-    else:
-        url = "https://wtx.macminim6.online/v1/tx/lite-sessions"
+    urls = {
+        "lc79": "https://wtx.tele68.com/v1/tx/lite-sessions",
+        "betvip": "https://wtx.macminim6.online/v1/tx/lite-sessions"
+    }
+    
+    if tool not in urls:
+        return JSONResponse({"status": "error", "msg": "Tool không hợp lệ!"})
     
     try:
         res = requests.get(
-            url, 
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0"},
+            urls[tool],
+            headers={"User-Agent": "Mozilla/5.0 Chrome/120.0"},
             timeout=8
         )
         data = res.json()
         
         if not data.get("list"):
-            return {"status": "error", "msg": "Chờ cầu mới..."}
+            return JSONResponse({"status": "error", "msg": "Chờ cầu mới..."})
         
         lst = data["list"][::-1]
         kq = ["Tài" if "TAI" in str(s.get("resultTruyenThong", "")).upper() else "Xỉu" for s in lst]
@@ -195,46 +176,52 @@ async def scan_game(tool: str, username: str):
             ket_qua["phien"] = "N/A"
         
         logger.info(f"✅ {ket_qua['du_doan']} ({ket_qua['ti_le']}%)")
-        return {"status": "success", "data": ket_qua}
+        return JSONResponse({"status": "success", "data": ket_qua})
         
     except Exception as e:
         logger.error(f"❌ Lỗi: {e}")
-        return {"status": "error", "msg": "Đứt kết nối Server Game!"}
+        return JSONResponse({"status": "error", "msg": "Đứt kết nối Server Game!"})
 
 @app.post("/api/auth")
-async def auth_user(req: AuthReq):
-    u = req.username.strip()
-    p = req.password.strip()
+async def auth_user(request: Request):
+    try:
+        data = await request.json()
+    except:
+        return JSONResponse({"status": "error", "msg": "Dữ liệu không hợp lệ!"})
+    
+    action = get_str(data, "action")
+    u = get_str(data, "username")
+    p = get_str(data, "password")
     
     if not u or not p:
-        return {"status": "error", "msg": "Nhập đủ thông tin!"}
+        return JSONResponse({"status": "error", "msg": "Nhập đủ thông tin!"})
     
     with get_db() as conn:
         c = conn.cursor()
         
-        if req.action == "register":
+        if action == "register":
             c.execute("SELECT username FROM users WHERE username = ?", (u,))
             if c.fetchone():
-                return {"status": "error", "msg": "Tài khoản đã có người xài!"}
+                return JSONResponse({"status": "error", "msg": "Tài khoản đã có người xài!"})
             c.execute(
-                "INSERT INTO users VALUES (?, ?, 0, '2000-01-01 00:00:00', 0)",
+                "INSERT INTO users (username, password, balance, vip_expire, is_banned) VALUES (?, ?, 0, '2000-01-01 00:00:00', 0)",
                 (u, p)
             )
             conn.commit()
             logger.info(f"✅ Đăng ký: {u}")
-            return {"status": "success", "msg": "Đăng ký thành công!"}
+            return JSONResponse({"status": "success", "msg": "Đăng ký thành công!"})
         
         else:
             c.execute("SELECT password, is_banned FROM users WHERE username = ?", (u,))
             row = c.fetchone()
             
             if not row or row[0] != p:
-                return {"status": "error", "msg": "Sai tài khoản hoặc mật khẩu!"}
+                return JSONResponse({"status": "error", "msg": "Sai tài khoản hoặc mật khẩu!"})
             if row[1] == 1 and u != "hungadmin11":
-                return {"status": "error", "msg": "Tài khoản bị khóa!"}
+                return JSONResponse({"status": "error", "msg": "Tài khoản bị khóa!"})
             
             logger.info(f"✅ Đăng nhập: {u}")
-            return {"status": "success", "msg": "Đăng nhập thành công!"}
+            return JSONResponse({"status": "success", "msg": "Đăng nhập thành công!"})
 
 @app.get("/api/user_info")
 async def get_user_info(username: str):
@@ -244,7 +231,7 @@ async def get_user_info(username: str):
         row = c.fetchone()
     
     if not row:
-        return {"status": "error"}
+        return JSONResponse({"status": "error"})
     
     is_vip = datetime.now() < datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") or username == "hungadmin11"
     
@@ -253,31 +240,50 @@ async def get_user_info(username: str):
     else:
         vip_str = row[1] if is_vip else "Chưa có VIP"
     
-    return {
+    return JSONResponse({
         "status": "success",
         "data": {
             "balance": row[0],
             "vip_expire": vip_str,
             "is_vip": is_vip
         }
-    }
+    })
 
 @app.post("/api/deposit")
-async def deposit(req: DepReq):
+async def deposit(request: Request):
+    try:
+        data = await request.json()
+    except:
+        return JSONResponse({"status": "error", "msg": "Dữ liệu không hợp lệ!"})
+    
+    username = get_str(data, "username")
+    network = get_str(data, "network")
+    amount = get_int(data, "amount")
+    pin = get_str(data, "pin")
+    serial = get_str(data, "serial")
+    
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
             "INSERT INTO deposits (username, card_type, card_amount, card_pin, card_serial, status) VALUES (?, ?, ?, ?, ?, 'PENDING')",
-            (req.username, req.network, req.amount, req.pin, req.serial)
+            (username, network, amount, pin, serial)
         )
         conn.commit()
     
-    return {"status": "success", "msg": "Đã gửi thẻ lên Hệ thống! Chờ Admin duyệt."}
+    return JSONResponse({"status": "success", "msg": "Đã gửi thẻ! Chờ Admin duyệt."})
 
 @app.post("/api/buy_vip")
-async def buy_vip(req: BuyReq):
-    if req.username == "hungadmin11":
-        return {"status": "success", "msg": "Sếp nạp làm gì, sếp VIP sẵn rồi!"}
+async def buy_vip(request: Request):
+    try:
+        data = await request.json()
+    except:
+        return JSONResponse({"status": "error", "msg": "Dữ liệu không hợp lệ!"})
+    
+    username = get_str(data, "username")
+    package = get_str(data, "package")
+    
+    if username == "hungadmin11":
+        return JSONResponse({"status": "success", "msg": "Sếp VIP sẵn rồi!"})
     
     prices = {
         "1D": (30000, 1),
@@ -287,18 +293,18 @@ async def buy_vip(req: BuyReq):
         "PERM": (200000, 36500)
     }
     
-    if req.package not in prices:
-        return {"status": "error", "msg": "Gói không hợp lệ!"}
+    if package not in prices:
+        return JSONResponse({"status": "error", "msg": "Gói không hợp lệ!"})
     
-    cost, days = prices[req.package]
+    cost, days = prices[package]
     
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT balance, vip_expire FROM users WHERE username = ?", (req.username,))
+        c.execute("SELECT balance, vip_expire FROM users WHERE username = ?", (username,))
         row = c.fetchone()
         
-        if row[0] < cost:
-            return {"status": "error", "msg": "Không đủ lúa! Vui lòng nạp thêm thẻ."}
+        if not row or row[0] < cost:
+            return JSONResponse({"status": "error", "msg": "Không đủ lúa!"})
         
         now = datetime.now()
         curr_exp = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
@@ -306,17 +312,17 @@ async def buy_vip(req: BuyReq):
         
         c.execute(
             "UPDATE users SET balance = balance - ?, vip_expire = ? WHERE username = ?",
-            (cost, new_exp.strftime("%Y-%m-%d %H:%M:%S"), req.username)
+            (cost, new_exp.strftime("%Y-%m-%d %H:%M:%S"), username)
         )
         conn.commit()
     
-    logger.info(f"👑 Mua VIP: {req.username} - {req.package}")
-    return {"status": "success", "msg": "Mua VIP thành công!"}
+    logger.info(f"👑 Mua VIP: {username} - {package}")
+    return JSONResponse({"status": "success", "msg": "Mua VIP thành công!"})
 
 @app.get("/api/admin/data")
 async def admin_data(username: str):
     if username != "hungadmin11":
-        return {"status": "error"}
+        return JSONResponse({"status": "error"})
     
     with get_db() as conn:
         c = conn.cursor()
@@ -325,32 +331,46 @@ async def admin_data(username: str):
         c.execute("SELECT id, username, card_type, card_amount, card_pin, card_serial FROM deposits WHERE status = 'PENDING'")
         deps = c.fetchall()
     
-    return {"status": "success", "users": users, "deps": deps}
+    return JSONResponse({"status": "success", "users": users, "deps": deps})
 
 @app.post("/api/admin/action")
-async def admin_action(req: AdminActReq):
-    if req.admin != "hungadmin11":
-        return {"status": "error"}
+async def admin_action(request: Request):
+    try:
+        data = await request.json()
+    except:
+        return JSONResponse({"status": "error", "msg": "Dữ liệu không hợp lệ!"})
+    
+    admin = get_str(data, "admin")
+    action = get_str(data, "action")
+    target = get_str(data, "target")
+    dep_id = get_int(data, "dep_id")
+    amount = get_int(data, "amount")
+    
+    if admin != "hungadmin11":
+        return JSONResponse({"status": "error"})
     
     with get_db() as conn:
         c = conn.cursor()
         
-        if req.action == "ban":
-            c.execute("UPDATE users SET is_banned = 1 WHERE username = ?", (req.target,))
-        elif req.action == "unban":
-            c.execute("UPDATE users SET is_banned = 0 WHERE username = ?", (req.target,))
-        elif req.action == "approve_dep":
-            c.execute("UPDATE deposits SET status = 'APPROVED' WHERE id = ?", (req.dep_id,))
-            c.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (req.amount, req.target))
-        elif req.action == "reject_dep":
-            c.execute("UPDATE deposits SET status = 'REJECTED' WHERE id = ?", (req.dep_id,))
+        if action == "ban":
+            c.execute("UPDATE users SET is_banned = 1 WHERE username = ?", (target,))
+        elif action == "unban":
+            c.execute("UPDATE users SET is_banned = 0 WHERE username = ?", (target,))
+        elif action == "approve_dep":
+            c.execute("UPDATE deposits SET status = 'APPROVED' WHERE id = ?", (dep_id,))
+            c.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (amount, target))
+        elif action == "reject_dep":
+            c.execute("UPDATE deposits SET status = 'REJECTED' WHERE id = ?", (dep_id,))
+        else:
+            return JSONResponse({"status": "error", "msg": "Hành động không hợp lệ!"})
         
         conn.commit()
     
-    return {"status": "success"}
+    return JSONResponse({"status": "success"})
 
 # ================= CHẠY SERVER =================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     logger.info(f"🚀 Server chạy tại 0.0.0.0:{port}")
     uvicorn.run("server_ai:app", host="0.0.0.0", port=port)
+        
