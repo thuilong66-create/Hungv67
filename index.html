@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HỆ THỐNG AI DỰ ĐOÁN - HƯNG ADMIN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #00aee0; 
+            --secondary: #e3001b; 
+            --accent: #ffd900; 
+            --text-main: #333333; 
+            --bg-gradient: linear-gradient(135deg, #87ceeb 0%, #e0f7fa 100%); 
+            --panel-bg: #ffffff; 
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            min-height: 100vh; 
+        }
+        
+        /* HEADER */
+        header { 
+            height: 65px; 
+            background: var(--primary); 
+            border-bottom: 4px solid var(--secondary); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 15px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-family: 'Fredoka One'; 
+            font-size: 1.1rem; 
+            color: #fff; 
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2); 
+        }
+        
+        .profile-badge { 
+            background: #fff; 
+            border: 2px solid var(--secondary); 
+            color: var(--secondary); 
+            padding: 5px 10px; 
+            border-radius: 15px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end;
+        }
+        
+        /* AUTH MODAL */
+        #auth-wrapper { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 999; 
+            backdrop-filter: blur(5px); 
+            background: rgba(0,0,0,0.6); 
+        }
+        
+        .auth-box { 
+            background: var(--panel-bg); 
+            border: 4px solid var(--primary); 
+            border-radius: 25px; 
+            padding: 25px; 
+            width: 90%; 
+            max-width: 400px; 
+            position: relative; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            text-align: center;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f0f8ff;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .auth-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* DASHBOARD */
+        #main-dashboard { 
+            display: none; 
+            grid-template-columns: 1fr; 
+            gap: 15px; 
+            padding: 15px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        
+        .panel { 
+            background: var(--panel-bg); 
+            border: 4px solid var(--primary); 
+            border-radius: 25px; 
+            padding: 20px; 
+            box-shadow: 0 5px 15px rgba(0, 174, 224, 0.15); 
+        }
+        
+        .panel-title { 
+            font-family: 'Fredoka One'; 
+            font-size: 1.2rem; 
+            color: var(--primary); 
+            margin-bottom: 15px; 
+            text-align: center; 
+            border-bottom: 2px dashed #b3e5fc; 
+            padding-bottom: 10px;
+        }
+        
+        /* BUTTONS */
+        .cyber-btn { 
+            padding: 12px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-family: 'Fredoka One'; 
+            font-size: 14px; 
+            color: #fff; 
+            width: 100%; 
+            margin-bottom: 10px; 
+            background: var(--primary); 
+            box-shadow: 0 4px 0 #008fba; 
+            transition: 0.1s; 
+        }
+        
+        .cyber-btn:active { 
+            transform: translateY(4px); 
+            box-shadow: none; 
+        }
+        
+        .btn-red { 
+            background: var(--secondary); 
+            box-shadow: 0 4px 0 #b30015; 
+        }
+        
+        .btn-yellow { 
+            background: var(--accent); 
+            color: var(--text-main); 
+            box-shadow: 0 4px 0 #cca800; 
+        }
+        
+        .btn-green { 
+            background: #2ecc71; 
+            box-shadow: 0 4px 0 #27ae60; 
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* INPUTS */
+        .input-box { 
+            width: 100%; 
+            background: #f0f8ff; 
+            border: 3px solid #b3e5fc; 
+            border-radius: 12px; 
+            color: var(--text-main); 
+            font-family: 'Nunito'; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            padding: 12px; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            outline: none; 
+        }
+        
+        .input-box:focus {
+            border-color: var(--primary);
+        }
+        
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            z-index: 9999;
+            font-weight: bold;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: var(--secondary); }
+        .toast.info { background: var(--primary); }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        
+        /* GAME OVERLAY */
+        #game-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            z-index: 2000; 
+            background: #000; 
+        }
+        
+        #game-frame { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        
+        .close-game-btn { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            background: var(--secondary); 
+            color: #fff; 
+            border: none; 
+            padding: 10px 15px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            z-index: 2001; 
+            box-shadow: 0 4px 0 #b30015; 
+            font-family: 'Fredoka One'; 
+            cursor: pointer; 
+        }
+        
+        /* WIDGET ROBOT */
+        #widget-container {
+            position: absolute;
+            top: 25%;
+            left: 5px;
+            z-index: 2005;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .robo-img {
+            width: 70px;
+            height: auto;
+            filter: drop-shadow(0 0 8px #00aee0);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-drag: none;
+            touch-action: none;
+        }
+        
+        .robo-img:active { 
+            cursor: grabbing; 
+            transform: scale(0.95); 
+        }
+        
+        .robo-dialog {
+            background: rgba(255, 255, 255, 0.98);
+            border: 3px solid var(--primary);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 160px;
+            position: relative;
+        }
+        
+        #robo-menu { 
+            display: none; 
+            position: absolute; 
+            top: 35px; 
+            right: 5px; 
+            background: #fff; 
+            border: 2px solid var(--primary); 
+            border-radius: 8px; 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); 
+            z-index: 2010; 
+            width: 140px; 
+            text-align: left; 
+            overflow: hidden;
+        }
+        
+        .menu-item { 
+            padding: 8px 10px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-bottom: 1px solid #eee; 
+            color: var(--text-main); 
+        }
+        
+        .menu-item:hover { 
+            background: #f0f8ff; 
+            color: var(--primary); 
+        }
+        
+        #admin-override-menu { 
+            display: none; 
+            padding: 8px; 
+            background: #ffebee; 
+            border-top: 2px dashed red; 
+        }
+        
+        .btn-hack { 
+            flex: 1; 
+            border: none; 
+            color: white; 
+            border-radius: 4px; 
+            font-size: 10px; 
+            padding: 5px; 
+            margin: 0 2px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        
+        /* LỊCH SỬ PHIÊN */
+        .history-row {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        
+        .history-item {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .history-item.tai { background: var(--secondary); }
+        .history-item.xiu { background: var(--primary); }
+        
+        /* STATUS INDICATOR */
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 1s infinite;
+        }
+        
+        .status-dot.online { background: #2ecc71; }
+        .status-dot.offline { background: #95a5a6; animation: none; }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* LOADING */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GAME OVERLAY + WIDGET -->
+    <div id="game-overlay">
+        <button class="close-game-btn" onclick="closeGame()">
+            <i class="fas fa-times"></i> ĐÓNG GAME
+        </button>
+        <iframe id="game-frame" src=""></iframe>
+        
+        <!-- WIDGET ROBOT -->
+        <div id="widget-container">
+            <img class="robo-img" id="drag-handle" 
+                 src="https://i.ibb.co/8LfL8qMY/1790089819833.png" 
+                 alt="Robot AI"
+                 onerror="this.src='https://upload.wikimedia.org/wikipedia/en/b/bd/Doraemon_character.png'">
+            
+            <div class="robo-dialog" id="robo-dialog-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #b3e5fc; margin-bottom: 8px; padding-bottom: 5px;">
+                    <span id="robo-mode-title" style="font-size: 11px; font-weight: 900; color: var(--secondary);">
+                        <span class="status-dot online" id="status-dot"></span>AUTO TOOL
+                    </span>
+                    <i class="fas fa-bars" style="cursor: pointer; color: var(--primary); font-size: 16px; padding: 0 5px;" onclick="toggleRoboMenu()"></i>
+                </div>
+                
+                <div id="robo-menu">
+                    <div class="menu-item" onclick="switchRoboMode('auto')">
+                        <i class="fas fa-satellite-dish"></i> Soi cầu Auto
+                    </div>
+                    <div class="menu-item" onclick="switchRoboMode('md5')">
+                        <i class="fas fa-fingerprint"></i> Phân tích MD5
+                    </div>
+                    <div id="admin-override-menu">
+                        <div style="font-size: 9px; color: red; text-align:center; font-weight:bold; margin-bottom:5px;">
+                            👑 ADMIN CHỈNH KẾT QUẢ
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <button class="btn-hack" style="background: var(--secondary);" onclick="forceResult('TÀI')">TÀI</button>
+                            <button class="btn-hack" style="background: var(--primary);" onclick="forceResult('XỈU')">XỈU</button>
+                            <button class="btn-hack" style="background: gray;" onclick="forceResult('AUTO')">AUTO</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="robo-view-auto">
+                    <div style="font-size: 10px; font-weight: 800;">
+                        PHIÊN: <span id="robo-phien">Đang tải...</span>
+                    </div>
+                    <div id="robo-kq" style="font-size: 26px; font-family: 'Fredoka One'; color: var(--secondary); margin: 5px 0;">
+                        <span class="loading"></span>
+                    </div>
+                    <div id="robo-tyle" style="color: var(--primary); font-size: 11px; font-weight: 800;">
+                        Đang kết nối Server...
+                    </div>
+                    <div id="robo-radar" style="font-size: 10px; margin-top: 5px; letter-spacing: 1px;"></div>
+                    <div id="robo-history" class="history-row"></div>
+                </div>
+                
+                <div id="robo-view-md5" style="display: none;">
+                    <input type="text" id="robo-md5-input" placeholder="Dán mã MD5..." 
+                           style="width: 100%; padding: 6px; font-size: 10px; border: 2px solid var(--primary); border-radius: 5px; margin-bottom: 8px; outline: none; font-weight: bold;">
+                    <button class="cyber-btn btn-red" style="padding: 6px; font-size: 11px; margin-bottom: 0;" onclick="analyzeMD5()">
+                        DỰ ĐOÁN MD5
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="auth-wrapper">
+        <div class="auth-box">
+            <img src="https://upload.wikimedia.org/wikipedia/en/b/bd/Doraemon_character.png" 
+                 style="width: 90px; margin-bottom: 10px;" alt="Logo">
+            <div class="panel-title" style="border:none; margin-bottom: 10px;">HỆ THỐNG DORAEMON AI</div>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">ĐĂNG NHẬP</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">ĐĂNG KÝ</div>
+            </div>
+            
+            <input type="text" id="auth-user" class="input-box" placeholder="Tài khoản..." maxlength="30">
+            <input type="password" id="auth-pass" class="input-box" placeholder="Mật khẩu..." maxlength="30">
+            <button class="cyber-btn" onclick="auth()" id="btn-auth">
+                <span id="btn-auth-text">ĐĂNG NHẬP</span>
+            </button>
+            <div style="font-size: 11px; color: #666; margin-top: 10px;">
+                Admin: <b>hungadmin11</b> / <b>hungki98</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header id="main-header" style="display:none;">
+        <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/en/b/bd/Doraemon_character.png" style="height: 35px;" alt="Logo">
+            HƯNG ADMIN
+        </div>
+        <div class="profile-badge">
+            <span id="header-user">User</span>
+            <span id="header-balance" style="color: var(--primary);">0 VNĐ</span>
+        </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <div id="main-dashboard">
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-server"></i> TỌA ĐỘ SERVER
+            </div>
+            <button class="cyber-btn btn-green" onclick="openTool('betvip')">
+                <i class="fas fa-crown"></i> BET VIP (PLAY.BETVIP.FIT)
+            </button>
+            <button class="cyber-btn" onclick="openTool('lc79')">
+                <i class="fas fa-satellite-dish"></i> LC79.BET
+            </button>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-info-circle"></i> THÔNG TIN TÀI KHOẢN
+            </div>
+            <div id="user-info-panel" style="text-align: center;">
+                <div style="margin-bottom: 10px;">
+                    <strong>Số dư:</strong> <span id="info-balance" style="color: var(--secondary); font-size: 1.2rem;">0 VNĐ</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>VIP:</strong> <span id="info-vip" style="color: var(--primary);">Chưa có VIP</span>
+                </div>
+                <button class="cyber-btn btn-yellow" onclick="showToast('Tính năng đang phát triển!', 'info')">
+                    <i class="fas fa-wallet"></i> NẠP TIỀN
+                </button>
+                <button class="cyber-btn btn-red" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> ĐĂNG XUẤT
+                </button>
+            </div>
+        </div>
+        
+        <div class="panel" style="text-align: center; font-size: 12px; color: #666;">
+            <i class="fas fa-exclamation-triangle" style="color: var(--secondary);"></i>
+            <strong>Cảnh báo:</strong> Dự đoán chỉ mang tính tham khảo. Game có thể gây nghiện, hãy chơi có trách nhiệm!
+        </div>
+    </div>
+
+    <script>
+        // ================= CẤU HÌNH =================
+        let currentUser = '';
+        let activeTool = 'lc79';
+        let apiTimer = null;
+        let adminOverride = 'AUTO';
+        let authMode = 'login';
+        
+        // Xác định API URL backend
+        const API_BASE = window.location.origin;
+        
+        // ================= TOAST NOTIFICATION =================
+        function showToast(message, type = 'info') {
+            const old = document.querySelector('.toast');
+            if (old) old.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // ================= AUTH TABS =================
+        function switchAuthTab(mode) {
+            authMode = mode;
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+            document.getElementById('btn-auth-text').innerText = mode === 'login' ? 'ĐĂNG NHẬP' : 'ĐĂNG KÝ';
+        }
+        
+        // ================= XÁC THỰC NGƯỜI DÙNG =================
+        async function auth() {
+            const username = document.getElementById('auth-user').value.trim();
+            const password = document.getElementById('auth-pass').value.trim();
+            
+            if (!username || !password) {
+                showToast('Vui lòng nhập đầy đủ thông tin!', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btn-auth');
+            const btnText = document.getElementById('btn-auth-text');
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span> ĐANG XỬ LÝ...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: authMode,
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    showToast(data.msg, 'success');
+                    
+                    if (authMode === 'login') {
+                        currentUser = username;
+                        loginSuccess(username);
+                    } else {
+                        switchAuthTab('login');
+                        document.getElementById('auth-pass').value = '';
+                    }
+                } else {
+                    showToast(data.msg, 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối server!', 'error');
+                console.error(e);
+            }
+            
+            btn.disabled = false;
+            btnText.innerText = authMode === 'login' ? 'ĐĂNG NHẬP' : 'ĐĂNG KÝ';
+        }
+        
+        function loginSuccess(username) {
+            document.getElementById('auth-wrapper').style.display = 'none';
+            document.getElementById('main-header').style.display = 'flex';
+            document.getElementById('main-dashboard').style.display = 'grid';
+            document.getElementById('header-user').innerText = username;
+            
+            // Hiển thị menu admin nếu là tài khoản admin
+            if (username.toLowerCase().includes('admin')) {
+                document.getElementById('admin-override-menu').style.display = 'block';
+            }
+            
+            // Lấy thông tin tài khoản
+            loadUserInfo(username);
+        }
+        
+        function logout() {
+            currentUser = '';
+            document.getElementById('auth-wrapper').style.display = 'flex';
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'none';
+            document.getElementById('auth-user').value = '';
+            document.getElementById('auth-pass').value = '';
+            closeGame();
+            showToast('Đã đăng xuất!', 'info');
+        }
+        
+        async function loadUserInfo(username) {
+            try {
+                const res = await fetch(`${API_BASE}/api/user_info?username=${encodeURIComponent(username)}`);
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('header-balance').innerText = data.data.balance.toLocaleString() + ' VNĐ';
+                    document.getElementById('info-balance').innerText = data.data.balance.toLocaleString() + ' VNĐ';
+                    document.getElementById('info-vip').innerText = data.data.vip_expire;
+                    document.getElementById('info-vip').style.color = data.data.is_vip ? '#2ecc71' : 'var(--primary)';
+                }
+            } catch (e) {
+                console.error('Lỗi lấy user info:', e);
+            }
+        }
+        
+        // ================= MỞ GAME & GỌI API =================
+        function openTool(toolName) {
+            activeTool = toolName;
+            document.getElementById('game-overlay').style.display = 'block';
+            
+            // Đặt URL game tương ứng
+            const gameUrls = {
+                'betvip': 'https://play.betvip.fit',
+                'lc79': 'https://lc79.bet'
+            };
+            document.getElementById('game-frame').src = gameUrls[toolName] || 'about:blank';
+            
+            document.getElementById('robo-mode-title').innerHTML = 
+                `<span class="status-dot online" id="status-dot"></span>AUTO ${toolName.toUpperCase()}`;
+            
+            // Gọi API lần đầu
+            fetchPrediction();
+            
+            // Đặt lịch gọi API mỗi 3 giây
+            if (apiTimer) clearInterval(apiTimer);
+            apiTimer = setInterval(fetchPrediction, 3000);
+            
+            showToast(`Đã kết nối ${toolName.toUpperCase()}!`, 'success');
+        }
+        
+        function closeGame() {
+            document.getElementById('game-overlay').style.display = 'none';
+            document.getElementById('game-frame').src = '';
+            if (apiTimer) {
+                clearInterval(apiTimer);
+                apiTimer = null;
+            }
+        }
+        
+        // ================= GỌI API DỰ ĐOÁN QUA BACKEND =================
+        async function fetchPrediction() {
+            try {
+                const url = `${API_BASE}/api/scan?tool=${activeTool}&username=${encodeURIComponent(currentUser || 'guest')}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    displayPrediction(data.data);
+                } else {
+                    document.getElementById('robo-tyle').innerText = data.msg || 'Đang dò cầu...';
+                    document.getElementById('status-dot').className = 'status-dot offline';
+                }
+            } catch (err) {
+                document.getElementById('robo-tyle').innerText = 'Mất kết nối server...';
+                document.getElementById('status-dot').className = 'status-dot offline';
+                console.error('Lỗi gọi API:', err);
+            }
+        }
+        
+        function displayPrediction(data) {
+            document.getElementById('status-dot').className = 'status-dot online';
+            
+            // Áp dụng admin override nếu có
+            let result = data.du_doan;
+            let rate = data.ti_le;
+            let pattern = data.loi_khuyen;
+            
+            if (adminOverride !== 'AUTO') {
+                result = adminOverride;
+                rate = 99;
+                pattern = 'Admin Override';
+            }
+            
+            // Hiển thị phiên
+            document.getElementById('robo-phien').innerText = '#' + (data.phien || '...');
+            
+            // Hiển thị kết quả dự đoán
+            const kqElem = document.getElementById('robo-kq');
+            kqElem.innerText = result;
+            kqElem.style.color = result === 'TÀI' ? 'var(--secondary)' : 'var(--primary)';
+            
+            // Hiển thị tỷ lệ và lời khuyên
+            document.getElementById('robo-tyle').innerText = `${pattern}`;
+            
+            // Hiển thị radar
+            document.getElementById('robo-radar').innerText = data.trend || '';
+            
+            // Hiển thị lịch sử
+            if (data.lich_su_15) {
+                const historyHtml = data.lich_su_15.map(kq => 
+                    `<div class="history-item ${kq === 'Tài' ? 'tai' : 'xiu'}">${kq === 'Tài' ? 'T' : 'X'}</div>`
+                ).join('');
+                document.getElementById('robo-history').innerHTML = historyHtml;
+            }
+        }
+        
+        // ================= ADMIN OVERRIDE =================
+        function forceResult(val) {
+            adminOverride = val;
+            showToast(val === 'AUTO' ? 'Đã chuyển về Auto' : `Đã ép kết quả: ${val}`, 'info');
+            fetchPrediction();
+        }
+        
+        // ================= MENU ROBOT =================
+        function toggleRoboMenu() {
+            const menu = document.getElementById('robo-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function switchRoboMode(mode) {
+            document.getElementById('robo-menu').style.display = 'none';
+            document.getElementById('robo-view-auto').style.display = mode === 'auto' ? 'block' : 'none';
+            document.getElementById('robo-view-md5').style.display = mode === 'md5' ? 'block' : 'none';
+        }
+        
+        // ================= PHÂN TÍCH MD5 =================
+        function analyzeMD5() {
+            const md5 = document.getElementById('robo-md5-input').value.trim();
+            if (!md5) {
+                showToast('Vui lòng nhập mã MD5!', 'error');
+                return;
+            }
+            
+            // Phân tích đơn giản dựa trên ký tự cuối của MD5
+            const lastChar = md5.slice(-1).toLowerCase();
+            const hexValue = parseInt(lastChar, 16);
+            const result = isNaN(hexValue) ? 'TÀI' : (hexValue >= 8 ? 'TÀI' : 'XỈU');
+            
+            document.getElementById('robo-kq').innerText = result;
+            document.getElementById('robo-kq').style.color = result === 'TÀI' ? 'var(--secondary)' : 'var(--primary)';
+            document.getElementById('robo-tyle').innerText = `MD5 Analysis (85%)`;
+            document.getElementById('robo-phien').innerText = 'MD5';
+            document.getElementById('robo-radar').innerText = '';
+            document.getElementById('robo-history').innerHTML = '';
+            
+            showToast(`Phân tích MD5: ${result}`, 'success');
+        }
+        
+        // ================= KÉO THẢ WIDGET =================
+        const widgetContainer = document.getElementById('widget-container');
+        const dragHandle = document.getElementById('drag-handle');
+        const dialogPanel = document.getElementById('robo-dialog-panel');
+        
+        let isDragging = false;
+        let hasMoved = false;
+        let startX, startY, initialLeft, initialTop;
+        
+        // PC
+        dragHandle.addEventListener("mousedown", dragStart);
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", dragEnd);
+        
+        // Điện thoại
+        dragHandle.addEventListener("touchstart", dragStart, { passive: false });
+        document.addEventListener("touchmove", drag, { passive: false });
+        document.addEventListener("touchend", dragEnd);
+        
+        function dragStart(e) {
+            if (e.target !== dragHandle) return;
+            
+            if (e.type === "touchstart") {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            } else {
+                startX = e.clientX;
+                startY = e.clientY;
+            }
+            
+            initialLeft = widgetContainer.offsetLeft;
+            initialTop = widgetContainer.offsetTop;
+            isDragging = true;
+            hasMoved = false;
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            
+            let currentX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+            let currentY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+            
+            let dx = currentX - startX;
+            let dy = currentY - startY;
+            
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                hasMoved = true;
+                e.preventDefault();
+            }
+            
+            // Giới hạn trong màn hình
+            const maxLeft = window.innerWidth - widgetContainer.offsetWidth;
+            const maxTop = window.innerHeight - widgetContainer.offsetHeight;
+            
+            let newLeft = Math.max(0, Math.min(maxLeft, initialLeft + dx));
+            let newTop = Math.max(0, Math.min(maxTop, initialTop + dy));
+            
+            widgetContainer.style.left = newLeft + 'px';
+            widgetContainer.style.top = newTop + 'px';
+        }
+        
+        function dragEnd() {
+            isDragging = false;
+        }
+        
+        // Click nhẹ vào robot → ẩn/hiện bảng
+        dragHandle.addEventListener("click", () => {
+            if (!hasMoved) {
+                dialogPanel.style.display = dialogPanel.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+        
+        // Nhấn ESC để đóng game
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGame();
+            }
+        });
+        
+        // Kiểm tra server khi load trang
+        window.addEventListener('load', async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                const data = await res.json();
+                console.log('✅ Server trạng thái:', data.status);
+            } catch (e) {
+                console.log('⚠️ Không thể kiểm tra server');
+            }
+        });
+    </script>
+</body>
+</html>
