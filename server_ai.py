@@ -90,7 +90,9 @@ def phan_tich_ai(kq_list):
             "tong_tai": tong_tai, "tong_xiu": tong_xiu,
             "chuoi_lap": chuoi, "kq_cuoi": kq_cuoi}
 
-# ================= MODEL DỮ LIỆU =================
+# ================= MODEL DỮ LIỆU (Pydantic v1) =================
+from pydantic import BaseModel
+
 class AuthReq(BaseModel):
     action: str
     username: str
@@ -113,7 +115,7 @@ class AdminActReq(BaseModel):
     target: str
     dep_id: int = 0
     amount: int = 0
-
+    
 # ================= API ROUTES =================
 @app.get("/")
 async def home():
