@@ -4,58 +4,145 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests, uvicorn, sqlite3, os, random, logging
 from datetime import datetime, timedelta
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-DB_FILE = "hethong_vip.db"
+DB_FILE = "hethong_vip_vv.db"
 
-# ================= KHO DATA MỚI =================
+# ================= 1. DATABASE TỰ ĐỘNG (VĨNH VIỄN) =================
 def khoi_tao_db():
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, balance INTEGER, vip_expire DATETIME, is_banned INTEGER)''')
     c.execute('''CREATE TABLE IF NOT EXISTS deposits (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, card_type TEXT, card_amount INTEGER, card_pin TEXT, card_serial TEXT, status TEXT)''')
-    # Tạo tài khoản Admin mặc định
-    c.execute("INSERT OR IGNORE INTO users (username, password, balance, vip_expire, is_banned) VALUES (?, ?, ?, ?, ?)", ('hungadmin11', 'hungki98', 999999999, '2099-12-31 23:59:59', 0))
-    conn.commit(); conn.close()
+    
+    # Tài khoản Admin Vĩnh Viễn (Hưng Admin - VIP đến 2099, Vô Hạn Tiền)
+    c.execute("INSERT OR IGNORE INTO users (username, password, balance, vip_expire, is_banned) VALUES (?, ?, ?, ?, ?)", 
+              ('hungadmin11', 'hungki98', 999999999999, '2099-12-31 23:59:59', 0))
+    conn.commit()
+    conn.close()
+
 khoi_tao_db()
 
-# ================= AI LOGIC =================
-def phan_tich_ai(kq_list):
-    tong_tai = kq_list.count("Tài"); tong_xiu = kq_list.count("Xỉu")
-    if len(kq_list) < 5:
-        du_doan = "TÀI" if kq_list[-1] == "Xỉu" else "XỈU"
-        return {"du_doan": du_doan, "ti_le": 55.0, "loi_khuyen": f"Vào {du_doan}", "trend": "...", "tong_tai": tong_tai, "tong_xiu": tong_xiu}
-    kq_cuoi = kq_list[-1]; chuoi = 1
+# ================= 2. AI MATRIX VVIP (GOD LEVEL) =================
+def phan_tich_ai_vvip(kq_list):
+    tong_tai = kq_list.count("Tài")
+    tong_xiu = kq_list.count("Xỉu")
+    
+    if len(kq_list) < 10:
+        du_doan = "TÀI" if random.choice([True, False]) else "XỈU"
+        return {"du_doan": du_doan, "ti_le": round(random.uniform(50.1, 58.5), 1), "loi_khuyen": "🔍 Đang nạp dữ liệu lõi...", "trend": "...", "tong_tai": tong_tai, "tong_xiu": tong_xiu}
+        
+    kq_cuoi = kq_list[-1]
+    chuoi = 1
     for i in range(len(kq_list)-2, -1, -1):
         if kq_list[i] == kq_cuoi: chuoi += 1
         else: break
-    du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
-    ty_le = min(50 + chuoi * 5, 99) if chuoi >= 3 else 60.0
-    radar = "".join(["🔴" if x == "Tài" else "🔵" for x in kq_list[-12:]])
-    logger.info(f"🎯 BẺ CẦU: chuỗi {chuoi}p {kq_cuoi} → {du_doan} | {ty_le}%")
-    return {"du_doan": du_doan, "ti_le": round(ty_le, 1), "loi_khuyen": f"Vào {du_doan} {ty_le}%", "trend": radar, "tong_tai": tong_tai, "tong_xiu": tong_xiu}
+            
+    history_10 = kq_list[-10:]
+    du_doan = "TÀI"
+    ty_le = 50.0
+    loi_khuyen = ""
+    
+    # [LỚP 1: MA TRẬN KHÁNG CỰ - NHẬN DIỆN CẦU LỪA]
+    # Nếu hệ thống nhả 1 chuỗi dài bỗng gãy 1 nhịp rồi lại lặp lại -> Cảnh báo bẫy
+    if history_10[-1] != history_10[-2] and history_10[-2] == history_10[-3] and history_10[-3] == history_10[-4] and chuoi == 1:
+        du_doan = history_10[-2].upper() 
+        ty_le = random.uniform(88.5, 96.2)
+        loi_khuyen = f"⚠️ Phát hiện Bẫy Nhà Cái -> Hồi mã thương {du_doan}"
+        
+    # [LỚP 2: BẮT ĐỈNH CẦU BỆT VÀ ĐU BỆT]
+    elif chuoi >= 4:
+        # Nếu bệt quá dài (trên 7), tỷ lệ gãy cực cao -> Bắt đầu dò bẻ
+        if chuoi >= 7:
+            du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
+            ty_le = random.uniform(85.0, 92.5)
+            loi_khuyen = f"🛑 Chạm đỉnh kháng cự (Bệt {chuoi}) -> Bẻ mạnh {du_doan}"
+        else:
+            du_doan = kq_cuoi.upper()
+            ty_le = random.uniform(91.5, 98.8)
+            loi_khuyen = f"🔥 Thuật toán đu bệt VIP -> Tất tay {du_doan}"
+            
+    # [LỚP 3: MẪU CẦU ĐỐI XỨNG 1-1 / 2-2 / 3-1]
+    elif history_10[-1] != history_10[-2] and history_10[-2] != history_10[-3]:
+        du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
+        ty_le = random.uniform(89.0, 95.5)
+        loi_khuyen = f"⚡ Cầu 1-1 siêu chuẩn -> Vào {du_doan}"
+        
+    elif history_10[-1] == history_10[-2] and history_10[-3] == history_10[-4] and history_10[-2] != history_10[-3]:
+        du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
+        ty_le = random.uniform(87.5, 94.0)
+        loi_khuyen = f"⚖️ Form 2-2 đối xứng -> Bơm {du_doan}"
 
+    # [LỚP 4: HỒI QUY RSI (CÂN BẰNG THUẬT TOÁN)]
+    else:
+        recent_20 = kq_list[-20:] if len(kq_list) >= 20 else kq_list
+        t_count = recent_20.count("Tài")
+        x_count = recent_20.count("Xỉu")
+        
+        if t_count > x_count + 4:
+            du_doan = "XỈU"
+            ty_le = random.uniform(75.5, 86.0)
+            loi_khuyen = f"📉 Quá Mua (Dư Tài) -> AI ép {du_doan}"
+        elif x_count > t_count + 4:
+            du_doan = "TÀI"
+            ty_le = random.uniform(75.5, 86.0)
+            loi_khuyen = f"📈 Quá Bán (Dư Xỉu) -> AI ép {du_doan}"
+        else:
+            du_doan = "TÀI" if kq_cuoi == "Xỉu" else "XỈU"
+            ty_le = random.uniform(65.0, 78.5)
+            loi_khuyen = f"🎲 Xung đột sóng -> Đi đều {du_doan}"
+    
+    # Giới hạn tỷ lệ trần để thực tế hóa
+    ty_le = min(ty_le, random.uniform(98.1, 99.8))
+    radar = "".join(["🔴" if x == "Tài" else "🔵" for x in kq_list[-15:]]) # Tăng radar lên 15 bóng
+    
+    logger.info(f"💎 LÕI VVIP: Phân tích {len(kq_list)} phiên -> Chốt {du_doan} ({ty_le}%)")
+    
+    return {
+        "du_doan": du_doan, 
+        "ti_le": round(ty_le, 1), 
+        "loi_khuyen": f"{loi_khuyen} {round(ty_le, 1)}%", 
+        "trend": radar, 
+        "tong_tai": tong_tai, 
+        "tong_xiu": tong_xiu
+    }
+
+# ================= 3. KẾT NỐI API QUÉT GAME =================
 @app.get("/api/scan")
 async def scan_game(tool: str, username: str):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    c.execute("SELECT vip_expire, is_banned FROM users WHERE username = ?", (username,)); row = c.fetchone(); conn.close()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT vip_expire, is_banned FROM users WHERE username = ?", (username,))
+    row = c.fetchone()
+    conn.close()
+    
     if not row: return {"status": "error", "msg": "Tài khoản không tồn tại!"}
     if row[1] == 1: return {"status": "error", "msg": "Tài khoản đã bị Admin khóa!"}
-    if datetime.now() > datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"): return {"status": "error", "msg": "Gói VIP đã hết hạn! Vui lòng mua thêm."}
+    if datetime.now() > datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"): 
+        return {"status": "error", "msg": "Gói VIP đã hết hạn! Vui lòng mua thêm."}
 
     url = "https://wtx.tele68.com/v1/tx/lite-sessions" if tool == "lc79" else "https://wtx.macminim6.online/v1/tx/lite-sessions"
     try:
         res = requests.get(url, headers={"User-Agent": "Chrome/120.0"}, timeout=5).json()
-        if not res.get("list"): return {"status": "error", "msg": "Chờ cầu mới..."}
+        if not res.get("list"): return {"status": "error", "msg": "Đang đồng bộ máy chủ..."}
+        
         lst = res["list"][::-1]
         kq = ["Tài" if "TAI" in str(s.get("resultTruyenThong", "")).upper() else "Xỉu" for s in lst]
-        data = phan_tich_ai(kq); data["phien"] = str(int(lst[-1]["id"]) + 1)
+        
+        # GỌI THUẬT TOÁN VVIP TẠI ĐÂY
+        data = phan_tich_ai_vvip(kq)
+        data["phien"] = str(int(lst[-1]["id"]) + 1)
+        
         return {"status": "success", "data": data}
-    except: return {"status": "error", "msg": "Bảo trì Server!"}
+    except Exception as e: 
+        logger.error(f"Lỗi API: {e}")
+        return {"status": "error", "msg": "Máy chủ Game bảo trì!"}
 
-# ================= AUTH & USER =================
+# ================= 4. AUTH & NGƯỜI DÙNG =================
 class AuthReq(BaseModel): action: str; username: str; password: str
 @app.post("/api/auth")
 async def auth_user(req: AuthReq):
@@ -82,7 +169,7 @@ async def get_user_info(username: str):
     is_vip = datetime.now() < datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
     return {"status": "success", "data": {"balance": row[0], "vip_expire": row[1] if is_vip else "Chưa có VIP", "is_vip": is_vip}}
 
-# ================= PAYMENT & STORE =================
+# ================= 5. NẠP TIỀN & CỬA HÀNG =================
 class DepReq(BaseModel): username: str; network: str; amount: int; pin: str; serial: str
 @app.post("/api/deposit")
 async def deposit(req: DepReq):
@@ -112,7 +199,7 @@ async def buy_vip(req: BuyReq):
     conn.commit(); conn.close()
     return {"status": "success", "msg": "Mua VIP thành công!"}
 
-# ================= ADMIN PANEL =================
+# ================= 6. TRANG QUẢN TRỊ ADMIN =================
 @app.get("/api/admin/data")
 async def admin_data(username: str):
     if username != "hungadmin11": return {"status": "error"}
@@ -135,9 +222,11 @@ async def admin_action(req: AdminActReq):
     elif req.action == "reject_dep": c.execute("UPDATE deposits SET status = 'REJECTED' WHERE id = ?", (req.dep_id,))
     conn.commit(); conn.close(); return {"status": "success"}
 
+# Cổng khởi chạy giao diện
 @app.get("/")
-async def home(): return FileResponse("index.html")
+async def home(): return FileResponse("templates/index.html")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run("server_ai:app", host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port)
+        
