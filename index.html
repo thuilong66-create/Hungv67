@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💎 AI VIP DIAMOND // TERMINAL v10.0</title>
+<style>
+  :root{
+    --bg:#050805; --panel:#0a0f0a; --line:#123012;
+    --green:#00ff41; --green-dim:#00b32d; --cyan:#00e5ff; --red:#ff2a2a;
+    --amber:#ffb000; --purple:#c026d3; --pink:#ff4d94;
+    --text:#c8ffc8; --text-dim:#5a8a5a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Courier New',Consolas,Monaco,monospace; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:999;
+    background:repeating-linear-gradient(0deg, rgba(0,255,65,.03) 0 1px, transparent 1px 3px);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:998;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.7) 100%);
+  }
+  .grid-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:linear-gradient(rgba(0,255,65,.05) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(0,255,65,.05) 1px, transparent 1px);
+    background-size:40px 40px;
+    animation:gridMove 20s linear infinite;
+  }
+  @keyframes gridMove{0%{background-position:0 0}100%{background-position:40px 40px}}
+  .wrap{
+    position:relative; z-index:1; display:flex; gap:14px;
+    padding:14px; min-height:100vh; max-width:1700px; margin:0 auto;
+  }
+  .panel{
+    background:var(--panel); border:1px solid var(--line);
+    box-shadow:0 0 20px rgba(0,255,65,.08), inset 0 0 30px rgba(0,255,65,.02);
+    display:flex; flex-direction:column; overflow:hidden;
+    border-radius:4px;
+  }
+  .panel-left{width:380px; flex-shrink:0}
+  .panel-right{flex:1; min-width:0; display:flex; flex-direction:column}
+  .panel-header{
+    padding:10px 14px; border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg, rgba(0,255,65,.12), rgba(192,38,211,.08), transparent);
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:12px; letter-spacing:2px; color:var(--green); text-transform:uppercase;
+  }
+  .panel-header .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.2s infinite}
+  @keyframes blink{50%{opacity:.2}}
+  .panel-body{padding:14px; overflow-y:auto; flex:1}
+  .panel-body::-webkit-scrollbar{width:6px}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--green-dim)}
+  .title{
+    font-size:22px; font-weight:bold; letter-spacing:3px; margin-bottom:4px;
+    background:linear-gradient(90deg, var(--green), var(--cyan), var(--purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 20px rgba(0,255,65,.3); position:relative; display:inline-block;
+    animation:titleGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes titleGlow{0%{filter:brightness(1)}100%{filter:brightness(1.4)}}
+  .diamond{display:inline-block; animation:spin 4s linear infinite}
+  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  .subtitle{font-size:10px; color:var(--text-dim); letter-spacing:2px; margin-bottom:16px}
+  .badge-vip{
+    display:inline-block; padding:2px 8px; font-size:9px; letter-spacing:2px;
+    background:linear-gradient(90deg, var(--purple), var(--pink)); color:#fff;
+    border-radius:2px; margin-left:6px; animation:pulseBadge 1.5s infinite;
+  }
+  @keyframes pulseBadge{0%,100%{box-shadow:0 0 5px var(--purple)}50%{box-shadow:0 0 15px var(--pink)}}
+  label{display:block; font-size:11px; color:var(--green-dim); margin:10px 0 4px; letter-spacing:1px; text-transform:uppercase}
+  input,select{
+    width:100%; background:#060d06; border:1px solid var(--line); color:var(--green);
+    padding:9px 10px; font-family:inherit; font-size:13px; outline:none; border-radius:3px;
+    transition:.2s;
+  }
+  input:focus,select:focus{border-color:var(--green); box-shadow:0 0 10px rgba(0,255,65,.4)}
+  .row{display:flex; gap:8px}
+  .row>*{flex:1}
+  .btn{
+    width:100%; padding:11px; margin-top:12px; cursor:pointer;
+    background:transparent; border:1px solid var(--green); color:var(--green);
+    font-family:inherit; font-size:13px; letter-spacing:3px; text-transform:uppercase;
+    transition:.15s; position:relative; overflow:hidden; border-radius:3px;
+  }
+  .btn:hover{background:rgba(0,255,65,.15); box-shadow:0 0 15px rgba(0,255,65,.4); transform:translateY(-1px)}
+  .btn:active{transform:scale(.98)}
+  .btn.scan{
+    background:linear-gradient(90deg, rgba(0,255,65,.25), rgba(0,229,255,.2), rgba(192,38,211,.15));
+    font-size:15px; font-weight:bold; padding:14px; animation:pulse 2s infinite;
+    border:1px solid var(--cyan); color:var(--cyan);
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 10px rgba(0,255,65,.3)}50%{box-shadow:0 0 25px rgba(0,229,255,.7)}}
+  .btn.small{padding:7px; font-size:11px; margin-top:8px}
+  .btn.cyan{border-color:var(--cyan); color:var(--cyan)}
+  .btn.cyan:hover{background:rgba(0,229,255,.15)}
+  .btn.red{border-color:var(--red); color:var(--red)}
+  .btn:disabled{opacity:.4; cursor:not-allowed; animation:none}
+  .status-line{
+    margin-top:14px; padding:8px 10px; font-size:11px; border:1px dashed var(--line);
+    color:var(--text-dim); min-height:32px; line-height:1.5; border-radius:3px;
+  }
+  .status-line.ok{color:var(--green); border-color:var(--green-dim)}
+  .status-line.err{color:var(--red); border-color:var(--red)}
+  .vip-box{margin-top:14px; padding:10px; border:1px solid var(--line); font-size:11px; line-height:1.8; border-radius:3px;
+    background:linear-gradient(135deg, rgba(192,38,211,.05), transparent)}
+  .vip-box b{color:var(--amber)}
+  .vip-box .exp{color:var(--cyan)}
+  .divider{height:1px; background:var(--line); margin:14px 0; position:relative}
+  .divider::after{content:"//"; position:absolute; right:0; top:-8px; background:var(--panel); padding:0 6px; color:var(--text-dim); font-size:10px}
+  /* ===== VÙNG BẺ INDICATOR ===== */
+  .vung-be-box{
+    margin-top:14px; padding:12px; border:1px solid var(--amber); border-radius:4px;
+    background:linear-gradient(135deg, rgba(255,176,0,.08), transparent);
+  }
+  .vung-be-title{font-size:10px; color:var(--amber); letter-spacing:2px; margin-bottom:8px}
+  .vung-be-zones{display:flex; gap:4px; margin-bottom:8px}
+  .zone{
+    flex:1; padding:6px 4px; text-align:center; font-size:9px; border:1px solid var(--line);
+    border-radius:3px; color:var(--text-dim); transition:.3s;
+  }
+  .zone.active{font-weight:bold; transform:scale(1.05)}
+  .zone.z1.active{background:rgba(0,229,255,.2); color:var(--cyan); border-color:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.4)}
+  .zone.z2.active{background:rgba(255,176,0,.2); color:var(--amber); border-color:var(--amber); box-shadow:0 0 10px rgba(255,176,0,.4)}
+  .zone.z3.active{background:rgba(255,77,148,.2); color:var(--pink); border-color:var(--pink); box-shadow:0 0 10px rgba(255,77,148,.4)}
+  .zone.z4.active{background:rgba(0,255,65,.2); color:var(--green); border-color:var(--green); box-shadow:0 0 10px rgba(0,255,65,.4)}
+  .vung-be-current{font-size:12px; color:var(--amber); text-align:center; font-weight:bold}
+  /* ===== RIGHT PANEL ===== */
+  .right-top{display:flex; gap:14px; padding:14px; border-bottom:1px solid var(--line); flex-wrap:wrap}
+  .conf-panel{flex:1; min-width:300px; max-height:280px; overflow-y:auto}
+  .conf-panel::-webkit-scrollbar{width:5px}
+  .conf-panel::-webkit-scrollbar-thumb{background:var(--purple)}
+  .conf-title{font-size:11px; color:var(--purple); letter-spacing:2px; margin-bottom:10px; text-transform:uppercase}
+  .conf-item{
+    display:flex; align-items:center; gap:8px; padding:6px 8px; margin-bottom:4px;
+    border:1px solid var(--line); border-radius:3px; font-size:10px; transition:.2s;
+  }
+  .conf-item:hover{border-color:var(--purple); background:rgba(192,38,211,.05)}
+  .conf-icon{font-size:14px}
+  .conf-name{flex:1; color:var(--text)}
+  .conf-bar-wrap{width:80px; height:8px; background:#0a1a0a; border-radius:4px; overflow:hidden}
+  .conf-bar{height:100%; border-radius:4px; transition:width 1s}
+  .conf-pct{width:36px; text-align:right; font-weight:bold}
+  .term{flex:1; overflow-y:auto; padding:14px; font-size:13px; line-height:1.7}
+  .term::-webkit-scrollbar{width:6px}
+  .term::-webkit-scrollbar-thumb{background:var(--green-dim)}
+  .term-line{white-space:pre-wrap; word-break:break-word}
+  .prompt{color:var(--cyan)}
+  .dim{color:var(--text-dim)}
+  .ok{color:var(--green)}
+  .warn{color:var(--amber)}
+  .err{color:var(--red)}
+  .cursor{display:inline-block; width:8px; height:14px; background:var(--green); vertical-align:middle; animation:blink 1s infinite}
+  .pred-box{
+    margin:10px 0; padding:20px; border:1px solid var(--green); border-radius:6px;
+    background:linear-gradient(135deg, rgba(0,255,65,.08), rgba(0,229,255,.05));
+    text-align:center; box-shadow:0 0 30px rgba(0,255,65,.25);
+    position:relative; overflow:hidden;
+  }
+  .pred-box::before{
+    content:""; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background:conic-gradient(transparent, rgba(0,255,65,.1), transparent 30%);
+    animation:rotate 4s linear infinite;
+  }
+  @keyframes rotate{100%{transform:rotate(360deg)}}
+  .pred-box>*{position:relative; z-index:1}
+  .pred-label{font-size:10px; letter-spacing:3px; color:var(--text-dim); margin-bottom:8px}
+  .pred-value{font-size:48px; font-weight:bold; letter-spacing:8px; text-shadow:0 0 20px currentColor; animation:predPop .5s ease-out}
+  @keyframes predPop{0%{transform:scale(.5); opacity:0}100%{transform:scale(1); opacity:1}}
+  .pred-value.TAI{color:var(--red)}
+  .pred-value.XIU{color:var(--cyan)}
+  .conf-bar-big{margin-top:14px; height:18px; background:#0a1a0a; border:1px solid var(--line); border-radius:9px; position:relative; overflow:hidden}
+  .conf-fill{height:100%; background:linear-gradient(90deg, var(--green-dim), var(--green), var(--cyan)); transition:width 1s; box-shadow:0 0 12px var(--green)}
+  .conf-text{margin-top:6px; font-size:11px; color:var(--green); letter-spacing:2px}
+  .radar{letter-spacing:3px; font-size:20px; margin:8px 0}
+  .radar .t{color:var(--red); text-shadow:0 0 8px var(--red)}
+  .radar .x{color:var(--cyan); text-shadow:0 0 8px var(--cyan)}
+  table.logs{width:100%; border-collapse:collapse; margin-top:8px; font-size:11px}
+  table.logs th,table.logs td{border:1px solid var(--line); padding:6px 8px; text-align:left}
+  table.logs th{color:var(--cyan); background:rgba(0,229,255,.05); letter-spacing:1px}
+  .win{color:var(--green)} .lose{color:var(--red)}
+  .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0}
+  .stat-card{border:1px solid var(--line); padding:10px; font-size:10px; border-radius:4px; text-align:center; transition:.2s}
+  .stat-card:hover{border-color:var(--green); transform:translateY(-2px)}
+  .stat-card .v{font-size:20px; color:var(--green); font-weight:bold; margin-top:4px}
+  .muc-cuoc-badge{
+    display:inline-block; padding:4px 12px; margin-top:8px; border-radius:3px;
+    font-size:12px; font-weight:bold; letter-spacing:2px;
+  }
+  .muc-cuoc-badge.allin{background:var(--red); color:#fff; animation:pulse 1s infinite}
+  .muc-cuoc-badge.dam{background:var(--amber); color:#000}
+  .muc-cuoc-badge.vua{background:var(--cyan); color:#000}
+  .muc-cuoc-badge.nhe{background:var(--green-dim); color:#000}
+  .boot{padding:30px; font-size:13px; line-height:2}
+  .hidden{display:none}
+  @media(max-width:1100px){
+    .wrap{flex-direction:column}
+    .panel-left{width:100%}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="wrap">
+  <!-- ============ TRÁI: CONTROL PANEL ============ -->
+  <div class="panel panel-left">
+    <div class="panel-header"><span>▸ CONTROL PANEL</span><span class="dot"></span></div>
+    <div class="panel-body">
+      <div class="title"><span class="diamond">💎</span> AI VIP DIAMOND</div>
+      <div class="subtitle">// TERMINAL v10.0 // 15 PHIÊN // 6 LỚP // 77 CẦU // 14 CONF <span class="badge-vip">VIP</span></div>
+      <label>▸ Username</label>
+      <input id="username" placeholder="nhập username..." autocomplete="off">
+      <label>▸ Password</label>
+      <input id="password" type="password" placeholder="********">
+      <div class="row">
+        <button class="btn small" onclick="auth('login')">LOGIN</button>
+        <button class="btn small cyan" onclick="auth('register')">REGISTER</button>
+      </div>
+      <div class="divider"></div>
+      <label>▸ Server Game</label>
+      <select id="tool">
+        <option value="kwinstore">KWIN STORE</option>
+        <option value="lc79">LC79</option>
+      </select>
+      <label>▸ Chế độ</label>
+      <select id="mode">
+        <option value="auto">AUTO (tiêu chuẩn)</option>
+        <option value="ai_pro">AI PRO (+5% tin cậy)</option>
+        <option value="diamond">💎 DIAMOND (CONF VIP)</option>
+      </select>
+      <button class="btn scan" id="scanBtn" onclick="doScan()">▶ SCAN CẦU VIP</button>
+      <div class="row">
+        <button class="btn small" id="autoBtn" onclick="toggleAuto()">AUTO: OFF</button>
+        <select id="interval" style="padding:7px;font-size:11px">
+          <option value="15">15s</option><option value="30" selected>30s</option><option value="60">60s</option>
+        </select>
+      </div>
+      <div class="status-line" id="status">> SYSTEM READY. Nhấn LOGIN rồi SCAN.</div>
+      <div class="vip-box" id="vipBox">
+        <div>TRẠNG THÁI: <b id="vipStatus">CHƯA LOGIN</b></div>
+        <div>SỐ DƯ: <span id="vipBalance">—</span></div>
+        <div>HẾN VIP: <span class="exp" id="vipExpire">—</span></div>
+      </div>
+      <!-- 💎 VÙNG BẺ INDICATOR -->
+      <div class="vung-be-box">
+        <div class="vung-be-title">💎 VÙNG BẺ ANALYZER</div>
+        <div class="vung-be-zones">
+          <div class="zone z0" id="zone0">≤2<br>TRUNG LẬP</div>
+          <div class="zone z1" id="zone1">3-4<br>⚡ ĐU</div>
+          <div class="zone z2" id="zone2">5-7<br>⚠️ BẺ</div>
+          <div class="zone z3" id="zone3">8+<br>💎 BẺ MẠNH</div>
+        </div>
+        <div class="vung-be-current" id="vungBeCurrent">CHƯA QUÉT</div>
+      </div>
+      <div class="divider"></div>
+      <button class="btn small red" onclick="logout()">LOGOUT / RESET</button>
+    </div>
+  </div>
+  <!-- ============ PHẢI: KẾT QUẢ ============ -->
+  <div class="panel panel-right">
+    <div class="panel-header"><span>▸ OUTPUT TERMINAL</span><span id="clock" class="dim"></span></div>
+    <!-- Top: CONF strategies + stats -->
+    <div class="right-top">
+      <div class="conf-panel">
+        <div class="conf-title">🔥 14 CHIẾN LƯỢC CONF VIP (tỷ lệ thắng)</div>
+        <div id="confList"></div>
+      </div>
+    </div>
+    <div class="term" id="term">
+      <div class="boot" id="boot">
+<span class="prompt">root@vip-diamond:~#</span> initializing DIAMOND neural core... <span class="ok">[OK]</span>
+<span class="prompt">root@vip-diamond:~#</span> loading 77 pattern matrix (63+14 CONF)... <span class="ok">[OK]</span>
+<span class="prompt">root@vip-diamond:~#</span> calibrating 6-layer detector + VUNG BE analyzer... <span class="ok">[OK]</span>
+<span class="prompt">root@vip-diamond:~#</span> CONF VIP module armed (7-1-7, 5-1-5, Fibonacci, Kim tự tháp...) <span class="ok">[OK]</span>
+<span class="prompt">root@vip-diamond:~#</span> <span class="ok">💎 SYSTEM ONLINE.</span> <span class="cursor"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let autoTimer = null, autoOn = false;
+if(localStorage.getItem('ai_user')) $('username').value = localStorage.getItem('ai_user');
+if(localStorage.getItem('ai_pass')) $('password').value = localStorage.getItem('ai_pass');
+
+function clock(){ $('clock').textContent = new Date().toLocaleTimeString('vi-VN'); }
+setInterval(clock,1000); clock();
+
+function setStatus(msg, type){
+  const el = $('status');
+  el.className = 'status-line' + (type ? ' '+type : '');
+  el.textContent = '> ' + msg;
+}
+function termAdd(html){
+  const t = $('term');
+  const div = document.createElement('div');
+  div.className = 'term-line';
+  div.innerHTML = html;
+  t.appendChild(div);
+  t.scrollTop = t.scrollHeight;
+  while(t.children.length > 60) t.removeChild(t.firstChild);
+}
+
+// Load CONF strategies list
+function loadConfStrategies(){
+  fetch('/api/conf_strategies').then(r=>r.json()).then(j=>{
+    if(j.status==='success'){
+      const html = j.data.map(s=>{
+        const color = s.ty_le>=95 ? '#00ff41' : s.ty_le>=92 ? '#00e5ff' : s.ty_le>=90 ? '#ffb000' : '#ff4d94';
+        const barColor = s.ty_le>=95 ? 'linear-gradient(90deg,#00b32d,#00ff41)' : s.ty_le>=92 ? 'linear-gradient(90deg,#0088aa,#00e5ff)' : s.ty_le>=90 ? 'linear-gradient(90deg,#aa7700,#ffb000)' : 'linear-gradient(90deg,#aa2255,#ff4d94)';
+        return `<div class="conf-item">
+          <span class="conf-icon">${s.icon}</span>
+          <span class="conf-name">${s.ten}</span>
+          <div class="conf-bar-wrap"><div class="conf-bar" style="width:${s.ty_le}%;background:${barColor}"></div></div>
+          <span class="conf-pct" style="color:${color}">${s.ty_le}%</span>
+        </div>`;
+      }).join('');
+      $('confList').innerHTML = html;
+    }
+  }).catch(()=>{
+    // Fallback static list
+    const fallback = [
+      {ten:"7-1-7",ty_le:97,icon:"🔥"},{ten:"Đảo 5-7/7-5",ty_le:96,icon:"🔥"},
+      {ten:"5-1-5",ty_le:95,icon:"🔥"},{ten:"Đồng hồ",ty_le:95,icon:"✅"},
+      {ten:"Đảo bệt kép",ty_le:94,icon:"✅"},{ten:"Kim tự tháp",ty_le:94,icon:"✅"},
+      {ten:"Bệt kép",ty_le:93,icon:"✅"},{ten:"Gãy 7",ty_le:93,icon:"✅"},
+      {ten:"Fibonacci",ty_le:93,icon:"✅"},{ten:"Double Break",ty_le:92,icon:"✅"},
+      {ten:"5-Phase",ty_le:92,icon:"✅"},{ten:"Gãy 5",ty_le:91,icon:"✅"},
+      {ten:"3-Phase",ty_le:90,icon:"✅"},{ten:"Zigzag VIP",ty_le:89,icon:"⚠️"},
+    ];
+    $('confList').innerHTML = fallback.map(s=>{
+      const color = s.ty_le>=95 ? '#00ff41' : s.ty_le>=92 ? '#00e5ff' : s.ty_le>=90 ? '#ffb000' : '#ff4d94';
+      return `<div class="conf-item"><span class="conf-icon">${s.icon}</span><span class="conf-name">${s.ten}</span>
+        <div class="conf-bar-wrap"><div class="conf-bar" style="width:${s.ty_le}%;background:${color}"></div></div>
+        <span class="conf-pct" style="color:${color}">${s.ty_le}%</span></div>`;
+    }).join('');
+  });
+}
+loadConfStrategies();
+
+// Update Vung Be indicator
+function updateVungBe(streak, vungBeText){
+  ['zone0','zone1','zone2','zone3'].forEach(z=>$(z).classList.remove('active'));
+  let active = 'zone0';
+  if(streak>=8) active='zone3';
+  else if(streak>=5) active='zone2';
+  else if(streak>=3) active='zone1';
+  $(active).classList.add('active');
+  $('vungBeCurrent').textContent = `STREAK: ${streak} tay → ${vungBeText}`;
+}
+
+async function auth(action){
+  const u=$('username').value.trim(), p=$('password').value.trim();
+  if(!u||!p){ setStatus('Nhập đủ username + password!','err'); return; }
+  setStatus('Đang xác thực...');
+  try{
+    const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,username:u,password:p})});
+    const j=await r.json();
+    if(j.status==='success'){
+      localStorage.setItem('ai_user',u); localStorage.setItem('ai_pass',p);
+      setStatus(j.msg+' — Giờ nhấn SCAN.','ok');
+      termAdd(`<span class="prompt">auth></span> <span class="ok">${j.msg}</span> user=<span class="ok">${u}</span>`);
+      loadUserInfo(u);
+    } else { setStatus(j.msg,'err'); termAdd(`<span class="prompt">auth></span> <span class="err">ERROR: ${j.msg}</span>`); }
+  }catch(e){ setStatus('Lỗi kết nối server!','err'); }
+}
+async function loadUserInfo(u){
+  try{
+    const r=await fetch('/api/user_info?username='+encodeURIComponent(u));
+    const j=await r.json();
+    if(j.status==='success'){
+      const d=j.data;
+      $('vipStatus').textContent = d.is_vip ? '💎 VIP DIAMOND' : 'CHƯA CÓ VIP';
+      $('vipStatus').style.color = d.is_vip ? '#c026d3' : '#ffb000';
+      $('vipBalance').textContent = d.balance.toLocaleString();
+      $('vipExpire').textContent = d.vip_expire;
+    }
+  }catch(e){}
+}
+function logout(){
+  localStorage.removeItem('ai_user'); localStorage.removeItem('ai_pass');
+  $('username').value=''; $('password').value='';
+  $('vipStatus').textContent='CHƯA LOGIN'; $('vipStatus').style.color='';
+  $('vipBalance').textContent='—'; $('vipExpire').textContent='—';
+  setStatus('Đã logout.');
+}
+async function doScan(){
+  const u=$('username').value.trim();
+  if(!u){ setStatus('Login trước!','err'); return; }
+  const tool=$('tool').value, mode=$('mode').value;
+  $('scanBtn').disabled=true;
+  setStatus(`💎 SCANNING DIAMOND [${tool}] ... mode=${mode}`);
+  termAdd(`<span class="prompt">scan></span> tool=<span class="warn">${tool}</span> mode=<span class="warn">${mode}</span> <span class="dim">→ phân tích 15 phiên + 14 CONF...</span>`);
+  try{
+    const r=await fetch(`/api/scan?tool=${tool}&username=${encodeURIComponent(u)}&mode=${mode}`);
+    const j=await r.json();
+    if(j.status!=='success'){
+      setStatus(j.msg,'err'); termAdd(`<span class="prompt">scan></span> <span class="err">ERROR: ${j.msg}</span>`);
+    } else {
+      renderResult(j.data);
+      setStatus(`DONE — phiên ${j.data.phien} → ${j.data.du_doan} (${j.data.ti_le}%)`,'ok');
+    }
+  }catch(e){ setStatus('Lỗi kết nối API game!','err'); termAdd(`<span class="prompt">scan></span> <span class="err">CONNECTION FAILED</span>`); }
+  $('scanBtn').disabled=false;
+}
+function renderResult(d){
+  const isTai = (d.du_doan||'').toUpperCase().includes('TÀI') || (d.du_doan||'').toUpperCase().includes('TAI');
+  const cls = isTai ? 'TAI' : 'XIU';
+  const radarHtml = (d.radar||'').split('').map(c=>c==='🔴'?'<span class="t">●</span>':'<span class="x">●</span>').join('');
+  let logsHtml='';
+  if(d.logs && d.logs.length){
+    logsHtml='<table class="logs"><tr><th>PHIÊN</th><th>DỰ ĐOÁN</th><th>KẾT QUẢ</th><th>TRẠNG</th></tr>'+
+      d.logs.map(l=>`<tr><td>${l[0]}</td><td>${l[1]}</td><td>${l[2]||'...'}</td><td class="${l[3]==1?'win':'lose'}">${l[3]==1?'WIN':(l[3]==0?'LOSE':'—')}</td></tr>`).join('')+'</table>';
+  }
+  // Mức cược badge
+  const mc = d.muc_cuoc || 'Vào vừa';
+  const mcCls = mc.includes('ALL')?'allin':mc.includes('đậm')?'dam':mc.includes('vừa')?'vua':'nhe';
+  // Update Vung Be
+  updateVungBe(d.streak_hien_tai||0, d.vung_be||'TRUNG LẬP');
+  // CONF name highlight
+  const confName = d.conf_name ? `<div style="margin-top:6px;font-size:11px;color:var(--purple)">🔥 CONF VIP: <b>${d.conf_name}</b></div>` : '';
+
+  termAdd(`
+<div class="pred-box">
+  <div class="pred-label">// DỰ ĐOÁN PHIÊN ${d.phien} // ${d.layer==='CONF'?'🔥 CONF VIP DETECTED':''}</div>
+  <div class="pred-value ${cls}">${d.du_doan}</div>
+  ${confName}
+  <div class="muc-cuoc-badge ${mcCls}">💰 ${mc.toUpperCase()}</div>
+  <div class="conf-bar-big"><div class="conf-fill" style="width:${d.ti_le}%"></div></div>
+  <div class="conf-text">CONFIDENCE: ${d.ti_le}%  |  LỚP ${d.layer||'?'}  |  ${(d.patterns||[]).join(', ')||'FALLBACK'}</div>
+</div>
+<div class="dim">> LỜI KHUYÊN:</div> <span class="warn">${d.loi_khuyen||''}</span>
+<div class="dim">> VÙNG BẺ HIỆN TẠI:</div> <span class="ok">${d.vung_be||'—'} (streak: ${d.streak_hien_tai||0} tay)</span>
+<div class="dim">> TREND 15:</div> <div class="radar">${radarHtml}</div>
+<div class="stats-grid">
+  <div class="stat-card">TÀI<div class="v" style="color:#ff2a2a">${d.tong_tai||0}</div></div>
+  <div class="stat-card">XỈU<div class="v" style="color:#00e5ff">${d.tong_xiu||0}</div></div>
+  <div class="stat-card">WIN RATE AI<div class="v">${d.ai_stats?d.ai_stats.win_rate:0}%</div></div>
+  <div class="stat-card">ENTROPY<div class="v">${d.entropy||0}</div></div>
+</div>
+<div class="dim">> NHẬT KÝ GẦN NHẤT:</div>${logsHtml}`);
+}
+function toggleAuto(){
+  autoOn=!autoOn;
+  $('autoBtn').textContent = 'AUTO: '+(autoOn?'ON':'OFF');
+  $('autoBtn').style.borderColor = autoOn?'var(--green)':'';
+  $('autoBtn').style.color = autoOn?'var(--green)':'';
+  if(autoOn){
+    const iv=parseInt($('interval').value)*1000;
+    autoTimer=setInterval(doScan, iv);
+    setStatus(`AUTO ON — quét mỗi ${iv/1000}s`,'ok');
+  } else { clearInterval(autoTimer); setStatus('AUTO OFF'); }
+}
+</script>
+</body>
+</html>
